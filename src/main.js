@@ -85,20 +85,58 @@ function makeRequest(options, postData = null) {
   });
 }
 
-function buildOptions(targetUrl, overrides = {}) {
+// ──────────────────────────────────────────────
+// User-Agent pool for rotation
+// ──────────────────────────────────────────────
+const USER_AGENTS = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+];
+let uaIndex = 0;
+function nextUA() {
+  const ua = USER_AGENTS[uaIndex % USER_AGENTS.length];
+  uaIndex++;
+  return ua;
+}
+
+function buildOptions(targetUrl, overrides = {}, runOptions = {}) {
   const parsed = new URL(targetUrl);
+  const ua = runOptions.rotateUA ? nextUA()
+    : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
+
+  const headers = {
+    'User-Agent': ua,
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.5',
+    'Connection': 'close',
+  };
+
+  // X-WAF-Tester header — opt-in only
+  if (runOptions.sendWafHeader) {
+    headers['X-WAF-Tester'] = 'waf-tester';
+  }
+
+  // Authentication
+  if (runOptions.auth) {
+    const { type, value, headerName, user, pass } = runOptions.auth;
+    if (type === 'bearer' && value)   headers['Authorization'] = `Bearer ${value}`;
+    if (type === 'apikey' && value)   headers[headerName || 'X-API-Key'] = value;
+    if (type === 'cookie' && value)   headers['Cookie'] = value;
+    if (type === 'basic' && user)     headers['Authorization'] = 'Basic ' +
+      Buffer.from(`${user}:${pass}`).toString('base64');
+  }
+
   return {
     protocol: parsed.protocol,
     hostname: parsed.hostname,
     port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
     path: parsed.pathname + parsed.search,
     method: 'GET',
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Accept': '*/*',
-      'Connection': 'close',
-      'X-WAF-Tester': 'waf-tester'
-    },
+    headers,
     rejectUnauthorized: false,
     ...overrides
   };
@@ -106,28 +144,61 @@ function buildOptions(targetUrl, overrides = {}) {
 
 // ──────────────────────────────────────────────
 // Evaluate a response: did the WAF block it?
+// Returns: { blocked, confidence, reason }
+// confidence: 'high' | 'likely' | 'uncertain' | 'bypassed'
 // ──────────────────────────────────────────────
-function evaluateBlock(res, testType) {
-  if (res.error) return { blocked: null, reason: `Network error: ${res.error}` };
+function evaluateBlock(res, baseline = null) {
+  if (res.error) return { blocked: null, confidence: 'uncertain', reason: `Network error: ${res.error}` };
 
-  const blockedStatuses = [400, 403, 405, 406, 429, 503];
-  const wafHeaders = ['x-waf', 'x-firewall', 'x-sucuri', 'x-cloudflare-waf',
-    'cf-ray', 'x-amzn-waf', 'x-azure-waf', 'server'];
-
-  if (blockedStatuses.includes(res.status)) {
-    return { blocked: true, reason: `HTTP ${res.status}` };
-  }
+  const hardBlockStatuses = new Set([403, 406, 429]);
+  const softBlockStatuses = new Set([400, 405, 503]);
+  const wafBodyKeywords = ['blocked', 'forbidden', 'access denied', 'waf', 'firewall',
+    'security violation', 'rejected', 'not acceptable', 'request denied', 'threat detected'];
 
   const bodyLower = (res.body || '').toLowerCase();
-  const blockKeywords = ['blocked', 'forbidden', 'access denied', 'waf', 'firewall',
-    'security', 'rejected', 'bad request', 'not acceptable'];
-  for (const kw of blockKeywords) {
-    if (bodyLower.includes(kw)) {
-      return { blocked: true, reason: `Body contains "${kw}"` };
-    }
+  const hasWafKeyword = wafBodyKeywords.some(kw => bodyLower.includes(kw));
+
+  // Hard block: definitive WAF status codes
+  if (hardBlockStatuses.has(res.status)) {
+    return { blocked: true, confidence: 'high', reason: `HTTP ${res.status} — definitive block` };
   }
 
-  return { blocked: false, reason: `HTTP ${res.status} — payload reached origin` };
+  // Baseline comparison: if we have a baseline, compare structural similarity
+  if (baseline && res.status === baseline.status) {
+    // Same status as baseline — check if body diverged significantly (WAF block page)
+    const baseLen = (baseline.body || '').length;
+    const resLen = (res.body || '').length;
+    const lenDiff = baseLen > 0 ? Math.abs(resLen - baseLen) / baseLen : 0;
+
+    if (hasWafKeyword) {
+      return { blocked: true, confidence: 'likely', reason: `HTTP ${res.status} matches baseline but body contains WAF keywords` };
+    }
+    if (lenDiff > 0.6 && resLen < baseLen) {
+      // Significantly shorter than baseline — likely a block/redirect page
+      return { blocked: true, confidence: 'uncertain', reason: `HTTP ${res.status} — response ${Math.round(lenDiff * 100)}% shorter than baseline (possible block page)` };
+    }
+    // Response looks similar to baseline — payload likely reached origin
+    return { blocked: false, confidence: 'bypassed', reason: `HTTP ${res.status} — response matches baseline structure, payload reached origin` };
+  }
+
+  // Soft block statuses (could be legitimate app errors or WAF blocks)
+  if (softBlockStatuses.has(res.status)) {
+    if (hasWafKeyword) {
+      return { blocked: true, confidence: 'likely', reason: `HTTP ${res.status} with WAF keywords in body` };
+    }
+    if (baseline && res.status !== baseline.status) {
+      return { blocked: true, confidence: 'uncertain', reason: `HTTP ${res.status} — differs from baseline ${baseline.status}, possible block` };
+    }
+    return { blocked: true, confidence: 'uncertain', reason: `HTTP ${res.status} — may be WAF block or legitimate app error` };
+  }
+
+  // WAF keyword in body on a 200
+  if (hasWafKeyword) {
+    return { blocked: true, confidence: 'likely', reason: `HTTP ${res.status} but body contains WAF keywords` };
+  }
+
+  // Everything else: not blocked
+  return { blocked: false, confidence: 'bypassed', reason: `HTTP ${res.status} — payload reached origin` };
 }
 
 // ══════════════════════════════════════════════
@@ -135,7 +206,7 @@ function evaluateBlock(res, testType) {
 // ══════════════════════════════════════════════
 
 // 1. OWASP Top 10
-async function runOwaspTests(targetUrl, sendProgress) {
+async function runOwaspTests(targetUrl, sendProgress, runOptions = {}, baseline = null) {
   const tests = [
     // SQL Injection
     { id: 'sqli-1', name: 'SQL Injection (classic)', category: 'A03 Injection',
@@ -188,27 +259,27 @@ async function runOwaspTests(targetUrl, sendProgress) {
 
     if (t.paramMode === 'query') {
       parsed.searchParams.set('q', t.payload);
-      opts = buildOptions(parsed.toString());
+      opts = buildOptions(parsed.toString(), {}, runOptions);
     } else if (t.paramMode === 'path') {
-      opts = buildOptions(targetUrl);
+      opts = buildOptions(targetUrl, {}, runOptions);
       opts.path = '/' + t.payload;
     } else if (t.paramMode === 'header') {
-      opts = buildOptions(targetUrl);
+      opts = buildOptions(targetUrl, {}, runOptions);
       opts.headers[t.headerName] = t.payload;
     } else if (t.paramMode === 'body') {
-      opts = buildOptions(targetUrl, { method: 'POST' });
+      opts = buildOptions(targetUrl, { method: 'POST' }, runOptions);
       opts.headers['Content-Type'] = t.contentType;
       opts.headers['Content-Length'] = Buffer.byteLength(t.payload);
     }
 
     const res = await makeRequest(opts, t.paramMode === 'body' ? t.payload : null);
-    const eval_ = evaluateBlock(res, t.id);
+    const eval_ = evaluateBlock(res, baseline);
 
     results.push({
       id: t.id, name: t.name, category: t.category,
       payload: t.payload.substring(0, 60),
       status: res.status, latency: res.latency,
-      blocked: eval_.blocked, reason: eval_.reason
+      blocked: eval_.blocked, confidence: eval_.confidence, reason: eval_.reason
     });
 
     await sleep(200);
@@ -217,7 +288,7 @@ async function runOwaspTests(targetUrl, sendProgress) {
 }
 
 // 2. Rate Limiting
-async function runRateLimitTests(targetUrl, sendProgress) {
+async function runRateLimitTests(targetUrl, sendProgress, runOptions = {}) {
   const results = [];
   const blockingStatuses = new Set([400, 403, 429, 503]);
   const isBlocked = r => r.error ? false : blockingStatuses.has(r.status);
@@ -225,18 +296,18 @@ async function runRateLimitTests(targetUrl, sendProgress) {
   // Burst test: 30 rapid requests
   sendProgress({ current: 1, total: 3, name: 'Burst flood (30 req)' });
   const burstResults = await Promise.all(
-    Array.from({ length: 30 }, () => makeRequest(buildOptions(targetUrl)))
+    Array.from({ length: 30 }, () => makeRequest(buildOptions(targetUrl, {}, runOptions)))
   );
   const burstBlocked = burstResults.filter(isBlocked).length;
   const burst429 = burstResults.filter(r => r.status === 429).length;
   const burst403 = burstResults.filter(r => r.status === 403).length;
-  // Pass if at least 20% of requests were blocked (WAF kicked in partway through)
   results.push({
     id: 'rl-burst', name: 'Burst Flood (30 simultaneous)',
     category: 'Rate Limiting', payload: '30 concurrent GET requests',
     status: burst429 > 0 ? 429 : burst403 > 0 ? 403 : burstResults[0].status,
     latency: Math.max(...burstResults.map(r => r.latency)),
     blocked: burstBlocked >= 6,
+    confidence: burstBlocked >= 15 ? 'high' : burstBlocked >= 6 ? 'likely' : burstBlocked > 0 ? 'uncertain' : 'bypassed',
     reason: `${burstBlocked} / 30 blocked (429: ${burst429}, 403: ${burst403}) — threshold: ≥6`
   });
 
@@ -244,18 +315,18 @@ async function runRateLimitTests(targetUrl, sendProgress) {
   sendProgress({ current: 2, total: 3, name: 'Sequential flood (20 req / 100ms)' });
   const seqResults = [];
   for (let i = 0; i < 20; i++) {
-    seqResults.push(await makeRequest(buildOptions(targetUrl)));
+    seqResults.push(await makeRequest(buildOptions(targetUrl, {}, runOptions)));
     await sleep(100);
   }
   const seqBlocked = seqResults.filter(isBlocked).length;
   const seq429 = seqResults.filter(r => r.status === 429).length;
-  // Pass if at least 1 request was rate-limited
   results.push({
     id: 'rl-seq', name: 'Sequential Flood (20 req @ 100ms)',
     category: 'Rate Limiting', payload: '20 sequential GET requests, 100ms apart',
     status: seq429 > 0 ? 429 : seqResults[seqResults.length - 1].status,
     latency: seqResults.reduce((a, r) => a + r.latency, 0),
     blocked: seqBlocked >= 1,
+    confidence: seqBlocked >= 5 ? 'high' : seqBlocked >= 1 ? 'likely' : 'bypassed',
     reason: `${seqBlocked} / 20 blocked (429: ${seq429}) — threshold: ≥1`
   });
 
@@ -263,21 +334,20 @@ async function runRateLimitTests(targetUrl, sendProgress) {
   sendProgress({ current: 3, total: 3, name: 'IP spoof bypass (X-Forwarded-For)' });
   const spoofResults = await Promise.all(
     Array.from({ length: 15 }, (_, i) => {
-      const opts = buildOptions(targetUrl);
+      const opts = buildOptions(targetUrl, {}, runOptions);
       opts.headers['X-Forwarded-For'] = `10.0.0.${i + 1}`;
       opts.headers['X-Real-IP'] = `10.0.0.${i + 1}`;
       return makeRequest(opts);
     })
   );
   const spoofBlocked = spoofResults.filter(isBlocked).length;
-  // For bypass test: "blocked" means the WAF still rate-limited despite spoofed IPs (good)
-  // "passed" (not blocked) means spoofed IPs successfully bypassed rate limiting (bad)
   results.push({
     id: 'rl-spoof', name: 'Rate Limit Bypass (X-Forwarded-For rotation)',
     category: 'Rate Limiting', payload: 'X-Forwarded-For: 10.0.0.1–15',
     status: spoofBlocked > 0 ? spoofResults.find(isBlocked).status : spoofResults[0].status,
     latency: Math.max(...spoofResults.map(r => r.latency)),
     blocked: spoofBlocked >= 3,
+    confidence: spoofBlocked >= 8 ? 'high' : spoofBlocked >= 3 ? 'likely' : spoofBlocked > 0 ? 'uncertain' : 'bypassed',
     reason: `${spoofBlocked} / 15 blocked despite spoofed IPs — bypass ${spoofBlocked < 3 ? 'SUCCEEDED (WAF trusts XFF)' : 'prevented'}`
   });
 
@@ -285,7 +355,7 @@ async function runRateLimitTests(targetUrl, sendProgress) {
 }
 
 // 3. Bot Detection
-async function runBotTests(targetUrl, sendProgress) {
+async function runBotTests(targetUrl, sendProgress, runOptions = {}, baseline = null) {
   const tests = [
     { id: 'bot-1', name: 'Missing User-Agent', category: 'Bot Detection',
       ua: '', desc: 'Empty User-Agent header' },
@@ -315,7 +385,8 @@ async function runBotTests(targetUrl, sendProgress) {
     const t = tests[i];
     sendProgress({ current: i + 1, total: tests.length, name: t.name });
 
-    const opts = buildOptions(targetUrl);
+    // Bot tests always override UA — pass rotateUA=false so buildOptions doesn't rotate
+    const opts = buildOptions(targetUrl, {}, { ...runOptions, rotateUA: false });
     if (t.ua !== undefined) opts.headers['User-Agent'] = t.ua;
     if (t.stripHeaders) {
       delete opts.headers['Accept'];
@@ -323,12 +394,12 @@ async function runBotTests(targetUrl, sendProgress) {
     }
 
     const res = await makeRequest(opts);
-    const eval_ = evaluateBlock(res, t.id);
+    const eval_ = evaluateBlock(res, baseline);
     results.push({
       id: t.id, name: t.name, category: t.category,
       payload: t.desc,
       status: res.status, latency: res.latency,
-      blocked: eval_.blocked, reason: eval_.reason
+      blocked: eval_.blocked, confidence: eval_.confidence, reason: eval_.reason
     });
     await sleep(300);
   }
@@ -336,40 +407,41 @@ async function runBotTests(targetUrl, sendProgress) {
 }
 
 // 4. Custom Bypass Attempts
-async function runBypassTests(targetUrl, sendProgress) {
+async function runBypassTests(targetUrl, sendProgress, runOptions = {}, baseline = null) {
   const parsed = new URL(targetUrl);
 
   const makeQueryTest = (id, name, payload, desc) => async () => {
     const url = new URL(targetUrl);
     url.searchParams.set('q', payload);
-    const res = await makeRequest(buildOptions(url.toString()));
+    const res = await makeRequest(buildOptions(url.toString(), {}, runOptions));
+    const eval_ = evaluateBlock(res, baseline);
     return { id, name, category: 'Bypass', payload: desc || payload.substring(0, 60),
-      status: res.status, latency: res.latency, ...evaluateBlock(res) };
+      status: res.status, latency: res.latency, ...eval_ };
   };
 
   const makeHeaderTest = (id, name, headers, desc) => async () => {
-    const opts = buildOptions(targetUrl);
+    const opts = buildOptions(targetUrl, {}, runOptions);
     Object.assign(opts.headers, headers);
     try {
       const res = await makeRequest(opts);
+      const eval_ = evaluateBlock(res, baseline);
       return { id, name, category: 'Bypass', payload: desc,
-        status: res.status, latency: res.latency, ...evaluateBlock(res) };
+        status: res.status, latency: res.latency, ...eval_ };
     } catch (err) {
-      // Node's http module rejects CRLF/control chars in header values as a
-      // security measure — treat this as "blocked at runtime" (good signal)
       return { id, name, category: 'Bypass', payload: desc,
         status: null, latency: 0,
-        blocked: true,
+        blocked: true, confidence: 'high',
         reason: `Blocked by Node HTTP layer: ${err.message}` };
     }
   };
 
   const makePathTest = (id, name, path_, desc) => async () => {
-    const opts = buildOptions(targetUrl);
+    const opts = buildOptions(targetUrl, {}, runOptions);
     opts.path = path_;
     const res = await makeRequest(opts);
+    const eval_ = evaluateBlock(res, baseline);
     return { id, name, category: 'Bypass', payload: desc,
-      status: res.status, latency: res.latency, ...evaluateBlock(res) };
+      status: res.status, latency: res.latency, ...eval_ };
   };
 
   const testFns = [
@@ -405,31 +477,47 @@ function sleep(ms) {
 // IPC Handlers
 // ══════════════════════════════════════════════
 
-ipcMain.handle('run-tests', async (event, { url, suites }) => {
+ipcMain.handle('run-tests', async (event, { url, suites, options }) => {
   const allResults = {};
+  uaIndex = 0; // reset UA rotation each run
+
+  const runOptions = {
+    rotateUA:    options?.rotateUA    ?? true,
+    sendWafHeader: options?.sendWafHeader ?? false,
+    useBaseline: options?.useBaseline ?? true,
+    auth:        options?.auth        ?? null,
+  };
 
   const send = (suite, progress) => {
     mainWindow.webContents.send('test-progress', { suite, ...progress });
   };
 
+  // Fetch baseline response (clean GET, no payload)
+  let baseline = null;
+  if (runOptions.useBaseline) {
+    try {
+      baseline = await makeRequest(buildOptions(url, {}, runOptions));
+    } catch (_) { baseline = null; }
+  }
+
   try {
     if (suites.includes('owasp')) {
-      allResults.owasp = await runOwaspTests(url, p => send('owasp', p));
+      allResults.owasp = await runOwaspTests(url, p => send('owasp', p), runOptions, baseline);
     }
     if (suites.includes('ratelimit')) {
-      allResults.ratelimit = await runRateLimitTests(url, p => send('ratelimit', p));
+      allResults.ratelimit = await runRateLimitTests(url, p => send('ratelimit', p), runOptions);
     }
     if (suites.includes('bot')) {
-      allResults.bot = await runBotTests(url, p => send('bot', p));
+      allResults.bot = await runBotTests(url, p => send('bot', p), runOptions, baseline);
     }
     if (suites.includes('bypass')) {
-      allResults.bypass = await runBypassTests(url, p => send('bypass', p));
+      allResults.bypass = await runBypassTests(url, p => send('bypass', p), runOptions, baseline);
     }
   } catch (err) {
     return { error: err.message };
   }
 
-  return { results: allResults };
+  return { results: allResults, baseline: baseline ? { status: baseline.status, latency: baseline.latency } : null };
 });
 
 ipcMain.handle('export-report', async (event, { results, url }) => {

@@ -59,7 +59,7 @@
       </div>
 
       <div class="sidebar-footer">
-        <span class="version-tag">v1.0.0</span>
+        <span class="version-tag">v1.1.0</span>
       </div>
     </aside>
 
@@ -87,6 +87,56 @@
             </button>
           </div>
           <div class="url-hint">Enter the full URL of the endpoint protected by your WAF</div>
+        </div>
+
+        <!-- Auth & Options Card -->
+        <div class="options-card">
+          <div class="options-row">
+            <div class="options-col">
+              <div class="target-label">AUTHENTICATION</div>
+              <div class="auth-row">
+                <select id="auth-type" class="auth-select">
+                  <option value="none">None</option>
+                  <option value="bearer">Bearer Token</option>
+                  <option value="apikey">API Key Header</option>
+                  <option value="cookie">Cookie</option>
+                  <option value="basic">Basic Auth</option>
+                </select>
+                <div id="auth-input-wrap" class="auth-input-wrap hidden">
+                  <input type="text" id="auth-header-name" class="auth-field hidden" placeholder="Header name (e.g. X-API-Key)">
+                  <input type="text" id="auth-value" class="auth-field" placeholder="Token / value">
+                  <input type="text" id="auth-user" class="auth-field hidden" placeholder="Username">
+                  <input type="password" id="auth-pass" class="auth-field hidden" placeholder="Password">
+                </div>
+              </div>
+            </div>
+            <div class="options-col options-toggles">
+              <div class="target-label">OPTIONS</div>
+              <label class="suite-toggle">
+                <input type="checkbox" id="opt-waf-header">
+                <span class="toggle-track"></span>
+                <span class="toggle-label">Send X-WAF-Tester header</span>
+              </label>
+              <label class="suite-toggle">
+                <input type="checkbox" id="opt-baseline" checked>
+                <span class="toggle-track"></span>
+                <span class="toggle-label">Baseline comparison</span>
+              </label>
+              <label class="suite-toggle">
+                <input type="checkbox" id="opt-rotate-ua" checked>
+                <span class="toggle-track"></span>
+                <span class="toggle-label">Rotate User-Agents</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Permission checkbox -->
+          <div class="permission-row">
+            <label class="permission-label">
+              <input type="checkbox" id="permission-check">
+              <span class="permission-text">I own this system or have explicit written permission to perform security testing on it</span>
+            </label>
+          </div>
         </div>
 
         <!-- Progress Section -->

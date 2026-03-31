@@ -1,6 +1,6 @@
 {
   "name": "waf-tester",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "WAF Evaluation Tool — tests OWASP, rate limiting, bot detection, and bypass attempts",
   "main": "src/main.js",
   "scripts": {
