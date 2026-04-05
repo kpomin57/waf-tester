@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'">
+  <title>WAF Tester</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <!-- SVG Shield Icon -->
+        <svg class="brand-shield" viewBox="0 0 32 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M16 1L2 7v10c0 9.25 6.05 17.9 14 20 7.95-2.1 14-10.75 14-20V7L16 1z" fill="rgba(0,212,255,0.1)" stroke="#00d4ff" stroke-width="1.5"/>
+          <path d="M16 7L7 11v6c0 5.5 3.8 10.7 9 12.2 5.2-1.5 9-6.7 9-12.2v-6L16 7z" fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="1"/>
+          <path d="M12 17l2.5 2.5L20 14" stroke="#00ffcc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="brand-text">
+          <div class="brand-name">WAF<span>Tester</span></div>
+          <div class="brand-sub">Security Evaluation</div>
+        </div>
+        <div class="brand-status">
+          <div class="status-dot"></div>
+          READY
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-item active" data-view="dashboard">
+          <span class="nav-icon">◈</span> Dashboard
+        </button>
+        <button class="nav-item" data-view="results">
+          <span class="nav-icon">◉</span> Results
+        </button>
+        <button class="nav-item" data-view="history">
+          <span class="nav-icon">◎</span> Export
+        </button>
+      </nav>
+
+      <hr class="suite-divider">
+
+      <div class="suite-config">
+        <div class="suite-label">Test Suites</div>
+        <label class="suite-toggle">
+          <input type="checkbox" id="suite-owasp" checked>
+          <span class="toggle-track"></span>
+          <span class="toggle-label">OWASP / CWE Core</span>
+          <span class="suite-count">44</span>
+        </label>
+        <label class="suite-toggle">
+          <input type="checkbox" id="suite-ratelimit" checked>
+          <span class="toggle-track"></span>
+          <span class="toggle-label">Rate Limiting</span>
+          <span class="suite-count">3</span>
+        </label>
+        <label class="suite-toggle">
+          <input type="checkbox" id="suite-bot" checked>
+          <span class="toggle-track"></span>
+          <span class="toggle-label">Bot Detection</span>
+          <span class="suite-count">10</span>
+        </label>
+        <label class="suite-toggle">
+          <input type="checkbox" id="suite-bypass" checked>
+          <span class="toggle-track"></span>
+          <span class="toggle-label">Bypass Attempts</span>
+          <span class="suite-count">15</span>
+        </label>
+        <label class="suite-toggle">
+          <input type="checkbox" id="suite-api" checked>
+          <span class="toggle-track"></span>
+          <span class="toggle-label">API Security</span>
+          <span class="suite-count">10</span>
+        </label>
+        <label class="suite-toggle">
+          <input type="checkbox" id="suite-bizlogic" checked>
+          <span class="toggle-track"></span>
+          <span class="toggle-label">Business Logic</span>
+          <span class="suite-count">8</span>
+        </label>
+      </div>
+
+      <div class="sidebar-footer">
+        <span class="version-tag">v1.2.0</span>
+        <span class="build-tag">90 TESTS</span>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+
+      <!-- Dashboard View -->
+      <section id="view-dashboard" class="view active">
+        <div class="view-header">
+          <h1>WAF <span>Evaluation</span></h1>
+          <p class="subtitle">// real attack payloads · baseline comparison · compliance mapping</p>
+        </div>
+
+        <!-- Target -->
+        <div class="section-label">Target Configuration</div>
+        <div class="target-card">
+          <div class="target-input-row">
+            <div class="url-input-wrap">
+              <span class="url-prefix-icon">⬡</span>
+              <input type="text" id="target-url" placeholder="https://target.example.com/endpoint"
+                autocomplete="off" spellcheck="false">
+            </div>
+            <button id="run-btn" class="run-btn">
+              <span class="run-icon">▶</span>
+              <span class="run-label">Run Tests</span>
+            </button>
+          </div>
+          <div class="url-hint">// enter the full URL of the endpoint protected by your WAF</div>
+        </div>
+
+        <!-- Auth & Options -->
+        <div class="section-label">Authentication &amp; Options</div>
+        <div class="options-card">
+          <div class="options-row">
+            <div class="options-col">
+              <div class="suite-label" style="margin-bottom:8px">Auth Method</div>
+              <div class="auth-row">
+                <select id="auth-type" class="auth-select">
+                  <option value="none">None</option>
+                  <option value="bearer">Bearer Token</option>
+                  <option value="apikey">API Key Header</option>
+                  <option value="cookie">Cookie</option>
+                  <option value="basic">Basic Auth</option>
+                </select>
+                <div id="auth-input-wrap" class="auth-input-wrap hidden">
+                  <input type="text" id="auth-header-name" class="auth-field hidden" placeholder="Header name (e.g. X-API-Key)">
+                  <input type="text" id="auth-value" class="auth-field" placeholder="Token / value">
+                  <input type="text" id="auth-user" class="auth-field hidden" placeholder="Username">
+                  <input type="password" id="auth-pass" class="auth-field hidden" placeholder="Password">
+                </div>
+              </div>
+            </div>
+            <div class="options-col options-toggles">
+              <div class="suite-label" style="margin-bottom:8px">Test Options</div>
+              <label class="suite-toggle">
+                <input type="checkbox" id="opt-waf-header">
+                <span class="toggle-track"></span>
+                <span class="toggle-label">Send X-WAF-Tester header</span>
+              </label>
+              <label class="suite-toggle">
+                <input type="checkbox" id="opt-baseline" checked>
+                <span class="toggle-track"></span>
+                <span class="toggle-label">Baseline comparison</span>
+              </label>
+              <label class="suite-toggle">
+                <input type="checkbox" id="opt-rotate-ua" checked>
+                <span class="toggle-track"></span>
+                <span class="toggle-label">Rotate User-Agents</span>
+              </label>
+            </div>
+          </div>
+          <div class="permission-row">
+            <label class="permission-label">
+              <input type="checkbox" id="permission-check">
+              <span class="permission-text">// I own this system or have explicit written authorization to perform security testing on it</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div id="progress-section" class="progress-section hidden">
+          <div class="progress-header">
+            <span id="progress-suite-label" class="progress-suite">Initializing…</span>
+            <span id="progress-counter" class="progress-counter">0 / 0</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div id="progress-bar" class="progress-bar"></div>
+          </div>
+          <div id="progress-test-name" class="progress-test-name">–</div>
+          <div class="live-feed">
+            <div class="live-feed-title">Live Feed</div>
+            <div id="live-feed-rows"></div>
+          </div>
+        </div>
+
+        <!-- Score Cards -->
+        <div id="score-section" class="score-section hidden">
+          <div class="score-header">
+            <h2>Evaluation Results</h2>
+            <div class="score-actions">
+              <button id="export-json-btn" class="action-btn">↓ JSON</button>
+              <button id="export-html-btn" class="action-btn primary">↓ HTML Report</button>
+            </div>
+          </div>
+          <div id="score-cards" class="score-cards"></div>
+          <div class="overall-row">
+            <div class="overall-label">Overall WAF Score</div>
+            <div id="overall-score" class="overall-score">–</div>
+            <div id="overall-grade" class="overall-grade"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results View -->
+      <section id="view-results" class="view">
+        <div class="view-header">
+          <h1>Test <span>Results</span></h1>
+          <div class="filter-row">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="blocked">Blocked ✓</button>
+            <button class="filter-btn" data-filter="passed">Bypassed ✗</button>
+            <button class="filter-btn" data-filter="error">Errors</button>
+            <select id="suite-filter" class="suite-select">
+              <option value="all">All Suites</option>
+              <option value="owasp">OWASP / CWE Core</option>
+              <option value="ratelimit">Rate Limiting</option>
+              <option value="bot">Bot Detection</option>
+              <option value="bypass">Bypass Attempts</option>
+              <option value="api">API Security</option>
+              <option value="bizlogic">Business Logic</option>
+            </select>
+            <select id="framework-filter" class="suite-select">
+              <option value="all">All Frameworks</option>
+              <option value="OWASP">OWASP</option>
+              <option value="CWE">CWE</option>
+              <option value="NIST">NIST</option>
+              <option value="PCI">PCI-DSS</option>
+            </select>
+          </div>
+        </div>
+        <div id="results-table-wrap">
+          <div class="empty-state">No scan data — run an evaluation from the dashboard</div>
+        </div>
+      </section>
+
+      <!-- Export View -->
+      <section id="view-history" class="view">
+        <div class="view-header">
+          <h1>Export <span>Report</span></h1>
+          <p class="subtitle">// save evaluation results for audit, compliance, or team review</p>
+        </div>
+        <div class="export-options">
+          <div class="export-card">
+            <div class="export-icon">{ }</div>
+            <h3>JSON Export</h3>
+            <p>Machine-readable report with all raw test data, response codes, confidence scores, and compliance tags.</p>
+            <button id="export-json-btn2" class="action-btn primary">Export JSON</button>
+          </div>
+          <div class="export-card">
+            <div class="export-icon">◫</div>
+            <h3>HTML Report</h3>
+            <p>Formatted visual report with score cards and full results table. Opens in any browser — ready to share.</p>
+            <button id="export-html-btn2" class="action-btn primary">Export HTML</button>
+          </div>
+        </div>
+        <div id="export-status-page" class="export-status hidden"></div>
+      </section>
+
+    </main>
+
+    <!-- Global toast -->
+    <div id="export-status" class="export-toast hidden"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
