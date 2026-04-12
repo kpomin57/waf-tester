@@ -4,6 +4,8 @@
 
 WAF Tester is a Windows desktop application (Electron) that sends real attack payloads to a user-supplied URL and evaluates whether the target's Web Application Firewall blocks them. It covers 90 tests across 6 suites, maps results to OWASP, CWE, NIST, and PCI-DSS frameworks, and exports polished HTML and JSON reports.
 
+![WAF Tester Screenshot](assets/screenshot.png)
+
 ---
 
 ## ⚠️ Legal Disclaimer
