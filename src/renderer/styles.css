@@ -285,6 +285,18 @@ body::after {
   margin-top: 10px; letter-spacing: 0.3px;
 }
 
+
+#proxy-host,#proxy-port {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--accent); font-family: var(--mono); font-size: 13px;
+  padding: 14px 0; letter-spacing: 0.3px;
+}
+#proxy-host,#proxy-port::placeholder { color: var(--muted); font-family: var(--mono); }
+.url-hint {
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+  margin-top: 10px; letter-spacing: 0.3px;
+}
+
 /* ── Run button ───────────────────────────────── */
 .run-btn {
   display: flex; align-items: center; gap: 10px;
@@ -390,6 +402,10 @@ body::after {
 }
 .progress-counter {
   font-family: var(--mono); font-size: 12px; color: var(--muted);
+}
+.proxy-active-badge {
+  font-family: var(--display); font-size: 14px; font-weight: 700;
+  color: var(--accent); letter-spacing: 1px; text-transform: uppercase;
 }
 .progress-bar-wrap {
   height: 4px; background: var(--surface3);
