@@ -56,49 +56,9 @@ function getAuth() {
     user: $('auth-user').value.trim(), pass: $('auth-pass').value.trim() };
 }
 
-// ──────────────────────────────────────────────
-// Proxy toggle UI — show/hide host+port fields
-// ──────────────────────────────────────────────
-function updateProxyFields() {
-  const enabled = $('opt-proxy') && $('opt-proxy').checked;
-  const wrap    = $('proxy-input-wrap');
-  if (!wrap) return;
-  if (enabled) wrap.classList.remove('hidden');
-  else         wrap.classList.add('hidden');
-}
-
-// Wire up the proxy checkbox once DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  const proxyCheck = $('opt-proxy');
-  if (proxyCheck) proxyCheck.addEventListener('change', updateProxyFields);
-  updateProxyFields();
-});
-
-// Also run immediately in case DOMContentLoaded already fired
-(function () {
-  const proxyCheck = $('opt-proxy');
-  if (proxyCheck) proxyCheck.addEventListener('change', updateProxyFields);
-  updateProxyFields();
-})();
-
-function getProxy() {
-  const proxyCheck = $('opt-proxy');
-  if (!proxyCheck || !proxyCheck.checked) return { enabled: false };
-  return {
-    enabled: true,
-    host: ($('proxy-host') && $('proxy-host').value.trim()) || '127.0.0.1',
-    port: ($('proxy-port') && $('proxy-port').value.trim()) || '8080',
-  };
-}
-
 function getOptions() {
-  return {
-    sendWafHeader: $('opt-waf-header').checked,
-    useBaseline:   $('opt-baseline').checked,
-    rotateUA:      $('opt-rotate-ua').checked,
-    auth:          getAuth(),
-    proxy:         getProxy(),   // ← proxy config now included
-  };
+  return { sendWafHeader: $('opt-waf-header').checked, useBaseline: $('opt-baseline').checked,
+    rotateUA: $('opt-rotate-ua').checked, auth: getAuth() };
 }
 
 // Run Tests
@@ -117,27 +77,15 @@ runBtn.addEventListener('click', async () => {
   }
 
   const suites = [];
-  if ($('suite-owasp').checked)     suites.push('owasp');
+  if ($('suite-owasp').checked)    suites.push('owasp');
   if ($('suite-ratelimit').checked) suites.push('ratelimit');
-  if ($('suite-bot').checked)       suites.push('bot');
-  if ($('suite-bypass').checked)    suites.push('bypass');
-  if ($('suite-api').checked)       suites.push('api');
-  if ($('suite-bizlogic').checked)  suites.push('bizlogic');
+  if ($('suite-bot').checked)      suites.push('bot');
+  if ($('suite-bypass').checked)   suites.push('bypass');
+  if ($('suite-api').checked)      suites.push('api');
+  if ($('suite-bizlogic').checked) suites.push('bizlogic');
   if (!suites.length) return;
 
   const options = getOptions();
-
-  // Surface proxy status in the UI so the user knows it's active
-  const proxyBadge = $('proxy-active-badge');
-  if (proxyBadge) {
-    if (options.proxy && options.proxy.enabled) {
-      proxyBadge.textContent = '\uD83D\uDD04 Proxy: ' + options.proxy.host + ':' + options.proxy.port;
-      proxyBadge.classList.remove('hidden');
-    } else {
-      proxyBadge.classList.add('hidden');
-    }
-  }
-
   state.running = true; state.targetUrl = url; state.results = null; state.baseline = null;
   runBtn.disabled = true;
   runBtn.classList.add('running');
@@ -196,6 +144,7 @@ function renderScoreSection() {
     const score   = total > 0 ? Math.round((blocked / total) * 100) : 0;
     totalBlocked += blocked; totalTests += total;
 
+    // SVG ring parameters
     const r = 30, circ = 2 * Math.PI * r;
     const offset = circ - (score / 100) * circ;
     const ringColor = score >= 80 ? 'var(--green)' : score >= 50 ? 'var(--yellow)' : 'var(--red)';
@@ -218,6 +167,7 @@ function renderScoreSection() {
       '<div class="score-card-detail">' + blocked + ' / ' + total + '</div>';
     scoreCards.appendChild(card);
 
+    // Animate ring after paint
     requestAnimationFrame(() => {
       setTimeout(() => {
         const ring = card.querySelector('.score-ring-fill');
@@ -230,7 +180,7 @@ function renderScoreSection() {
   const color      = overall >= 80 ? 'var(--green)' : overall >= 50 ? 'var(--yellow)' : 'var(--red)';
   const grade      = overall >= 90 ? 'A' : overall >= 80 ? 'B' : overall >= 65 ? 'C' : overall >= 50 ? 'D' : 'F';
   const gradeBg    = overall >= 80 ? 'rgba(0,230,118,0.08)' : overall >= 50 ? 'rgba(255,193,7,0.08)' : 'rgba(255,61,87,0.08)';
-  const gradeBorder= overall >= 80 ? 'rgba(0,230,118,0.3)'  : overall >= 50 ? 'rgba(255,193,7,0.3)'  : 'rgba(255,61,87,0.3)';
+  const gradeBorder= overall >= 80 ? 'rgba(0,230,118,0.3)' : overall >= 50 ? 'rgba(255,193,7,0.3)' : 'rgba(255,61,87,0.3)';
 
   overallScore.textContent = overall + '%';
   overallScore.style.color = color;
@@ -266,6 +216,7 @@ function addFeedRow(name, blocked, confidence) {
   liveFeedRows.scrollTop = liveFeedRows.scrollHeight;
 }
 
+// Compliance tag colors
 const tagColors = {
   'OWASP': '#f0883e', 'CWE': '#79c0ff', 'NIST': '#7ee787', 'PCI': '#d2a8ff'
 };
