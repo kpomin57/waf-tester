@@ -4,6 +4,8 @@
 
 WAF Tester evaluates Web Application Firewalls by sending real attack payloads to a user-supplied URL and reporting whether they are blocked. Available as a Windows desktop app (Electron) and a Python CLI that runs anywhere.
 
+![WAF Tester Screenshot](screenshot.png)
+
 ---
 
 ## ⚠️ Legal Disclaimer
