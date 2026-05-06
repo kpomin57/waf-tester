@@ -117,6 +117,25 @@
           <div class="url-hint">// enter the full URL of the endpoint protected by your WAF</div>
         </div>
 
+        <!-- Target -->
+        <div class="section-label">Proxy Configuration</div>
+        <div class="target-card">
+          <div class="target-input-row" style="padding: 10px;">
+            <label class="url-hint">
+              <input type="checkbox" id="opt-proxy"> Route through proxy (Burp Suite)
+            </label>
+          </div>
+            <div class="target-input-row">
+            <div id="proxy-input-wrap" class="url-input-wrap">
+              <span class="url-prefix-icon">⬡</span>
+              <input id="proxy-host" type="text" value="127.0.0.1" placeholder="Host" style="width:140px;">
+              <input id="proxy-port" type="text" value="8080" placeholder="Port" style="width:70px;">
+            </div>
+        
+          </div>
+          <div class="url-hint">// enter your proxy and port</div>
+        </div>
+
         <!-- Auth & Options -->
         <div class="section-label">Authentication &amp; Options</div>
         <div class="options-card">
@@ -169,6 +188,8 @@
         <!-- Progress -->
         <div id="progress-section" class="progress-section hidden">
           <div class="progress-header">
+            <!-- Active proxy badge (place near progress label) -->
+            <span id="proxy-active-badge" class="proxy-active-badge"></span>
             <span id="progress-suite-label" class="progress-suite">Initializing…</span>
             <span id="progress-counter" class="progress-counter">0 / 0</span>
           </div>

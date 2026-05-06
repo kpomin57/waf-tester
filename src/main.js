@@ -39,13 +39,36 @@ app.on('window-all-closed', () => {
 
 // ──────────────────────────────────────────────
 // Core HTTP fetch used by all test modules
+// Supports optional routing through a Burp/HTTP proxy
 // ──────────────────────────────────────────────
-function makeRequest(options, postData = null) {
+function makeRequest(options, postData = null, proxyOptions = null) {
   return new Promise((resolve) => {
     const startTime = Date.now();
-    const proto = options.protocol === 'https:' ? https : http;
 
-    const req = proto.request(options, (res) => {
+    let proto = options.protocol === 'https:' ? https : http;
+    let reqOptions = { ...options };
+
+    // Route through proxy (e.g. Burp Suite) if configured
+    if (proxyOptions?.enabled && proxyOptions?.host && proxyOptions?.port) {
+      // Always connect to the proxy over plain HTTP;
+      // Burp will handle the upstream TLS itself.
+      proto = http;
+      const targetPort = options.port || (options.protocol === 'https:' ? 443 : 80);
+      reqOptions = {
+        hostname: proxyOptions.host,
+        port: proxyOptions.port,
+        // Send absolute-form request target so Burp knows where to forward
+        path: `${options.protocol}//${options.hostname}:${targetPort}${options.path}`,
+        method: options.method || 'GET',
+        headers: {
+          ...options.headers,
+          Host: options.hostname, // Preserve original Host header
+        },
+        rejectUnauthorized: false,
+      };
+    }
+
+    const req = proto.request(reqOptions, (res) => {
       let body = '';
       res.on('data', chunk => { body += chunk; });
       res.on('end', () => {
@@ -83,6 +106,15 @@ function makeRequest(options, postData = null) {
     if (postData) req.write(postData);
     req.end();
   });
+}
+
+// ──────────────────────────────────────────────
+// Convenience wrapper — threads proxy config from
+// runOptions into every makeRequest call so callers
+// don't have to extract it manually each time.
+// ──────────────────────────────────────────────
+function makeProxiedRequest(options, postData, runOptions) {
+  return makeRequest(options, postData, runOptions?.proxy ?? null);
 }
 
 // ──────────────────────────────────────────────
@@ -165,7 +197,6 @@ function evaluateBlock(res, baseline = null) {
 
   // Baseline comparison: if we have a baseline, compare structural similarity
   if (baseline && res.status === baseline.status) {
-    // Same status as baseline — check if body diverged significantly (WAF block page)
     const baseLen = (baseline.body || '').length;
     const resLen = (res.body || '').length;
     const lenDiff = baseLen > 0 ? Math.abs(resLen - baseLen) / baseLen : 0;
@@ -174,10 +205,8 @@ function evaluateBlock(res, baseline = null) {
       return { blocked: true, confidence: 'likely', reason: `HTTP ${res.status} matches baseline but body contains WAF keywords` };
     }
     if (lenDiff > 0.6 && resLen < baseLen) {
-      // Significantly shorter than baseline — likely a block/redirect page
       return { blocked: true, confidence: 'uncertain', reason: `HTTP ${res.status} — response ${Math.round(lenDiff * 100)}% shorter than baseline (possible block page)` };
     }
-    // Response looks similar to baseline — payload likely reached origin
     return { blocked: false, confidence: 'bypassed', reason: `HTTP ${res.status} — response matches baseline structure, payload reached origin` };
   }
 
@@ -290,7 +319,7 @@ async function runOwaspTests(targetUrl, sendProgress, runOptions, baseline) {
       opts.headers['Content-Type'] = t.contentType;
       opts.headers['Content-Length'] = Buffer.byteLength(t.payload);
     }
-    const res = await makeRequest(opts, t.paramMode === 'body' ? t.payload : null);
+    const res = await makeProxiedRequest(opts, t.paramMode === 'body' ? t.payload : null, runOptions);
     results.push(makeResult(t, res, evaluateBlock(res, baseline)));
     await sleep(200);
   }
@@ -305,7 +334,9 @@ async function runRateLimitTests(targetUrl, sendProgress, runOptions) {
   const isBlocked = r => r.error ? false : blockingStatuses.has(r.status);
 
   sendProgress({ current: 1, total: 3, name: 'Burst flood (30 req)' });
-  const burstResults = await Promise.all(Array.from({ length: 30 }, () => makeRequest(buildOptions(targetUrl, {}, runOptions))));
+  const burstResults = await Promise.all(
+    Array.from({ length: 30 }, () => makeProxiedRequest(buildOptions(targetUrl, {}, runOptions), null, runOptions))
+  );
   const burstBlocked = burstResults.filter(isBlocked).length;
   const burst429 = burstResults.filter(r => r.status === 429).length;
   const burst403 = burstResults.filter(r => r.status === 403).length;
@@ -318,7 +349,10 @@ async function runRateLimitTests(targetUrl, sendProgress, runOptions) {
 
   sendProgress({ current: 2, total: 3, name: 'Sequential flood (20 req / 100ms)' });
   const seqResults = [];
-  for (let i = 0; i < 20; i++) { seqResults.push(await makeRequest(buildOptions(targetUrl, {}, runOptions))); await sleep(100); }
+  for (let i = 0; i < 20; i++) {
+    seqResults.push(await makeProxiedRequest(buildOptions(targetUrl, {}, runOptions), null, runOptions));
+    await sleep(100);
+  }
   const seqBlocked = seqResults.filter(isBlocked).length;
   const seq429 = seqResults.filter(r => r.status === 429).length;
   results.push({ id:'rl-seq', name:'Sequential Flood (20 req @ 100ms)', category:'Rate Limiting',
@@ -333,7 +367,7 @@ async function runRateLimitTests(targetUrl, sendProgress, runOptions) {
     const opts = buildOptions(targetUrl, {}, runOptions);
     opts.headers['X-Forwarded-For'] = '10.0.0.' + (i + 1);
     opts.headers['X-Real-IP'] = '10.0.0.' + (i + 1);
-    return makeRequest(opts);
+    return makeProxiedRequest(opts, null, runOptions);
   }));
   const spoofBlocked = spoofResults.filter(isBlocked).length;
   results.push({ id:'rl-spoof', name:'Rate Limit Bypass (X-Forwarded-For rotation)', category:'Rate Limiting',
@@ -367,7 +401,7 @@ async function runBotTests(targetUrl, sendProgress, runOptions, baseline) {
     const opts = buildOptions(targetUrl, {}, Object.assign({}, runOptions, { rotateUA: false }));
     if (t.ua !== undefined) opts.headers['User-Agent'] = t.ua;
     if (t.stripHeaders) { delete opts.headers['Accept']; delete opts.headers['Accept-Language']; }
-    const res = await makeRequest(opts);
+    const res = await makeProxiedRequest(opts, null, runOptions);
     results.push(makeResult(Object.assign({}, t, { category:'Bot Detection', payload:t.desc, payloadDesc:t.desc }), res, evaluateBlock(res, baseline)));
     await sleep(300);
   }
@@ -381,7 +415,7 @@ async function runBypassTests(targetUrl, sendProgress, runOptions, baseline) {
 
   const qTest = (id, name, payload, desc, tags) => async () => {
     const url = new URL(targetUrl); url.searchParams.set('q', payload);
-    const res = await makeRequest(buildOptions(url.toString(), {}, runOptions));
+    const res = await makeProxiedRequest(buildOptions(url.toString(), {}, runOptions), null, runOptions);
     const ev = evaluateBlock(res, baseline);
     return { id, name, category:'Bypass', tags:tags||[], payload:desc||payload.substring(0,60), status:res.status, latency:res.latency, ...ev };
   };
@@ -389,7 +423,7 @@ async function runBypassTests(targetUrl, sendProgress, runOptions, baseline) {
     const opts = buildOptions(targetUrl, {}, runOptions);
     Object.assign(opts.headers, headers);
     try {
-      const res = await makeRequest(opts);
+      const res = await makeProxiedRequest(opts, null, runOptions);
       const ev = evaluateBlock(res, baseline);
       return { id, name, category:'Bypass', tags:tags||[], payload:desc, status:res.status, latency:res.latency, ...ev };
     } catch(err) {
@@ -398,7 +432,7 @@ async function runBypassTests(targetUrl, sendProgress, runOptions, baseline) {
   };
   const pTest = (id, name, path_, desc, tags) => async () => {
     const opts = buildOptions(targetUrl, {}, runOptions); opts.path = path_;
-    const res = await makeRequest(opts);
+    const res = await makeProxiedRequest(opts, null, runOptions);
     const ev = evaluateBlock(res, baseline);
     return { id, name, category:'Bypass', tags:tags||[], payload:desc, status:res.status, latency:res.latency, ...ev };
   };
@@ -441,19 +475,19 @@ async function runApiTests(targetUrl, sendProgress, runOptions, baseline) {
     opts.headers['Content-Type'] = 'application/json';
     opts.headers['Content-Length'] = Buffer.byteLength(body);
     if (extraHeaders) Object.assign(opts.headers, extraHeaders);
-    const res = await makeRequest(opts, body);
+    const res = await makeProxiedRequest(opts, body, runOptions);
     return { status:res.status, latency:res.latency, ...evaluateBlock(res, baseline) };
   };
   const doGet = async (extraHeaders, overridePath) => {
     const opts = buildOptions(targetUrl, {}, runOptions);
     if (extraHeaders) Object.assign(opts.headers, extraHeaders);
     if (overridePath) opts.path = overridePath;
-    const res = await makeRequest(opts);
+    const res = await makeProxiedRequest(opts, null, runOptions);
     return { status:res.status, latency:res.latency, ...evaluateBlock(res, baseline) };
   };
   const doVerb = async (method) => {
     const opts = buildOptions(targetUrl, { method }, runOptions);
-    const res = await makeRequest(opts);
+    const res = await makeProxiedRequest(opts, null, runOptions);
     return { status:res.status, latency:res.latency, ...evaluateBlock(res, baseline) };
   };
 
@@ -471,7 +505,7 @@ async function runApiTests(targetUrl, sendProgress, runOptions, baseline) {
       const opts = buildOptions(targetUrl,{method:'POST'},runOptions);
       const body = "' OR 1=1--";
       opts.headers['Content-Type']='text/plain'; opts.headers['Content-Length']=Buffer.byteLength(body);
-      const res = await makeRequest(opts, body);
+      const res = await makeProxiedRequest(opts, body, runOptions);
       return { status:res.status, latency:res.latency, ...evaluateBlock(res,baseline) };
     }},
   ];
@@ -496,12 +530,12 @@ async function runBusinessLogicTests(targetUrl, sendProgress, runOptions, baseli
   const doPost = async (path, body) => {
     const opts = buildOptions(targetUrl, {method:'POST'}, runOptions);
     opts.path = path; opts.headers['Content-Type']='application/json'; opts.headers['Content-Length']=Buffer.byteLength(body);
-    const res = await makeRequest(opts, body);
+    const res = await makeProxiedRequest(opts, body, runOptions);
     return { status:res.status, latency:res.latency, ...evaluateBlock(res,baseline) };
   };
   const doGet = async (path) => {
     const opts = buildOptions(targetUrl,{},runOptions); opts.path = path;
-    const res = await makeRequest(opts);
+    const res = await makeProxiedRequest(opts, null, runOptions);
     return { status:res.status, latency:res.latency, ...evaluateBlock(res,baseline) };
   };
 
@@ -509,7 +543,7 @@ async function runBusinessLogicTests(targetUrl, sendProgress, runOptions, baseli
     { id:'bl-1', name:'Negative Quantity (price manipulation)',   tags:['OWASP:A01','CWE-840','NIST:AC-3','PCI:6.4'], fn:()=>doPost(parsed.pathname,'{"item_id":1,"quantity":-1,"price":9.99}') },
     { id:'bl-2', name:'Zero-price product submission',            tags:['OWASP:A01','CWE-840','NIST:AC-3','PCI:6.4'], fn:()=>doPost(parsed.pathname,'{"item_id":1,"quantity":1,"price":0.00}') },
     { id:'bl-3', name:'Admin endpoint direct access',             tags:['OWASP:A01','CWE-284','NIST:AC-3','PCI:6.4'], fn:()=>doGet(parsed.pathname+'/admin') },
-    { id:'bl-4', name:'HTTP Parameter Pollution (role dup)',       tags:['OWASP:A01','CWE-235','NIST:SI-10'],          fn: async()=>{ const url=new URL(targetUrl); url.searchParams.append('role','user'); url.searchParams.append('role','admin'); const opts=buildOptions(url.toString(),{},runOptions); const res=await makeRequest(opts); return {status:res.status,latency:res.latency,...evaluateBlock(res,baseline)}; } },
+    { id:'bl-4', name:'HTTP Parameter Pollution (role dup)',       tags:['OWASP:A01','CWE-235','NIST:SI-10'],          fn: async()=>{ const url=new URL(targetUrl); url.searchParams.append('role','user'); url.searchParams.append('role','admin'); const opts=buildOptions(url.toString(),{},runOptions); const res=await makeProxiedRequest(opts, null, runOptions); return {status:res.status,latency:res.latency,...evaluateBlock(res,baseline)}; } },
     { id:'bl-5', name:'Account Enumeration (timing probe)',        tags:['OWASP:A07','CWE-204','NIST:IA-5','PCI:6.4'], fn:()=>doPost(parsed.pathname,'{"username":"admin@example.com","password":"wrongpassword123"}') },
     { id:'bl-6', name:'Excessive Data Exposure (verbose error)',   tags:['OWASP:A02','CWE-209','NIST:SI-11'],          fn:()=>doGet(parsed.pathname+'/user/99999999') },
     { id:'bl-7', name:'Forced Browsing - hidden endpoint',         tags:['OWASP:A01','CWE-284','NIST:AC-3','PCI:6.4'], fn:()=>doGet(parsed.pathname+'/internal/health') },
@@ -541,10 +575,16 @@ ipcMain.handle('run-tests', async (event, { url, suites, options }) => {
   uaIndex = 0; // reset UA rotation each run
 
   const runOptions = {
-    rotateUA:    options?.rotateUA    ?? true,
+    rotateUA:      options?.rotateUA      ?? true,
     sendWafHeader: options?.sendWafHeader ?? false,
-    useBaseline: options?.useBaseline ?? true,
-    auth:        options?.auth        ?? null,
+    useBaseline:   options?.useBaseline   ?? true,
+    auth:          options?.auth          ?? null,
+    // Burp / HTTP proxy support — only active when enabled: true is passed
+    proxy: options?.proxy?.enabled ? {
+      enabled: true,
+      host:    options.proxy.host || '127.0.0.1',
+      port:    parseInt(options.proxy.port, 10) || 8080,
+    } : null,
   };
 
   const send = (suite, progress) => {
@@ -555,7 +595,7 @@ ipcMain.handle('run-tests', async (event, { url, suites, options }) => {
   let baseline = null;
   if (runOptions.useBaseline) {
     try {
-      baseline = await makeRequest(buildOptions(url, {}, runOptions));
+      baseline = await makeProxiedRequest(buildOptions(url, {}, runOptions), null, runOptions);
     } catch (_) { baseline = null; }
   }
 
