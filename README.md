@@ -2,9 +2,7 @@
 
 **Enterprise WAF Evaluation Tool** — Real attack payloads. Real results. Compliance-ready reports.
 
-WAF Tester is a Windows desktop application (Electron) that sends real attack payloads to a user-supplied URL and evaluates whether the target's Web Application Firewall blocks them. It covers 90 tests across 6 suites, maps results to OWASP, CWE, NIST, and PCI-DSS frameworks, and exports polished HTML and JSON reports.
-
-![WAF Tester Screenshot](assets/screenshot.png)
+WAF Tester evaluates Web Application Firewalls by sending real attack payloads to a user-supplied URL and reporting whether they are blocked. Available as a Windows desktop app (Electron) and a Python CLI that runs anywhere.
 
 ---
 
@@ -39,43 +37,26 @@ Every test is tagged to one or more compliance frameworks:
 - **NIST 800-53** (SI-10, AC-3, SC-5, IA-5, etc.)
 - **PCI-DSS 4.0** (Requirement 6.4)
 
-Results can be filtered by framework in the Results view, making it easy to generate compliance-specific evidence.
-
 ### Detection Intelligence
 
-- **Baseline comparison** — fetches a clean GET before tests run, then compares every test response against the baseline to reduce false positives from apps that legitimately return 4xx
-- **Confidence scoring** — each blocked result is rated `HIGH`, `LIKELY`, or `UNCERTAIN` rather than a binary pass/fail
-- **Multi-signal evaluation** — status codes, WAF keyword detection in body, and response length divergence from baseline all factor into the verdict
+- **Baseline comparison** — fetches a clean GET before tests run, then compares every response to reduce false positives
+- **Confidence scoring** — results rated `HIGH`, `LIKELY`, or `UNCERTAIN` rather than binary pass/fail
+- **Multi-signal evaluation** — status codes, WAF keyword detection, and response length divergence all factor into the verdict
 
 ### Authentication Support
-
-Test WAFs protecting authenticated endpoints:
 
 - Bearer token
 - API key (custom header name)
 - Cookie / session token
 - Basic Auth (username + password)
 
-### Additional Options
-
-- **User-Agent rotation** — cycles through 6 realistic browser UAs per request so traffic looks like real users
-- **X-WAF-Tester header** — opt-in identification header for log filtering (off by default to avoid WAF whitelisting)
-- **Baseline comparison toggle** — disable for speed, enable for accuracy
-- **Permission gate** — must confirm authorization before each scan
-
-### Reporting
-
-- **JSON export** — machine-readable full report with all raw data, confidence scores, and compliance tags
-- **HTML export** — formatted visual report with color-coded results table, score cards, and overall grade — opens in any browser, ready to share with your team or attach to an audit
-
 ---
 
-## Installation
+## Windows Desktop App (Electron)
 
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) 18 or later
-- npm (included with Node.js)
 
 ### Run from Source
 
@@ -92,19 +73,155 @@ npm start
 npm run build
 ```
 
-Output appears in `dist/` as both an NSIS installer (`.exe`) and a portable executable. The built app requires no prerequisites on the target machine — Electron bundles its own Node.js runtime.
+Output appears in `dist/` as both an NSIS installer and a portable `.exe`. No prerequisites needed on the target machine — Electron bundles its own runtime.
 
 ---
 
-## Usage
+## Python CLI Version
 
-1. Enter the full URL of the endpoint protected by your WAF (e.g. `https://app.example.com/api/search`)
-2. Select an authentication method if the endpoint requires login
-3. Toggle which test suites to run in the sidebar
-4. Check the authorization confirmation box
-5. Click **Run Tests**
-6. Watch results stream in live; switch to the **Results** tab for the full filtered table
-7. Export as JSON or HTML from the **Export** tab or the Dashboard
+A single-file Python version that runs anywhere Python is available — Linux servers, CI/CD pipelines, Docker containers, WSL, or any environment where the Windows `.exe` is not an option.
+
+### Prerequisites
+
+```bash
+pip install rich requests
+```
+
+### Basic Usage
+
+```bash
+python waf_tester.py --url https://target.example.com
+```
+
+Runs all 90 tests, prompts for authorization confirmation, prints color-coded results to the terminal, and saves both a JSON and HTML report to the current directory.
+
+### Options
+
+| Flag | Description | Default |
+|------|-------------|---------|
+| `--url` | Target URL **(required)** | — |
+| `--suites` | Comma-separated suites to run | all |
+| `--auth-type` | `none` / `bearer` / `apikey` / `cookie` / `basic` | `none` |
+| `--auth-value` | Token, cookie string, or API key value | — |
+| `--auth-header` | Header name for API key auth | `X-API-Key` |
+| `--auth-user` | Username for Basic Auth | — |
+| `--auth-pass` | Password for Basic Auth | — |
+| `--no-baseline` | Disable baseline comparison | off |
+| `--no-rotate-ua` | Disable User-Agent rotation | off |
+| `--waf-header` | Send `X-WAF-Tester` identification header | off |
+| `--output` | `terminal`, `json`, `html` (comma-separated) | all three |
+| `--output-dir` | Directory to save report files | `.` |
+| `--timeout` | Per-request timeout in seconds | `10` |
+| `--proxy` | Proxy URL for all requests (e.g. `http://127.0.0.1:8080`) | off |
+| `--confirm` | Skip the authorization confirmation prompt | off |
+
+### Examples
+
+```bash
+# Run all suites
+python waf_tester.py --url https://app.example.com
+
+# Run OWASP and API suites only
+python waf_tester.py --url https://app.example.com --suites owasp,api
+
+# Bearer token auth
+python waf_tester.py --url https://app.example.com/api \
+  --auth-type bearer --auth-value eyJhbGciOiJIUzI1NiJ9...
+
+# API key auth
+python waf_tester.py --url https://app.example.com/api \
+  --auth-type apikey --auth-header X-API-Key --auth-value mykey123
+
+# Save reports to a folder, skip confirmation (CI/CD)
+python waf_tester.py --url https://app.example.com \
+  --output-dir ./reports --confirm
+
+# Terminal output only — no files saved
+python waf_tester.py --url https://app.example.com --output terminal
+
+# Route traffic through Burp Suite
+python waf_tester.py --url https://app.example.com --proxy http://127.0.0.1:8080
+```
+
+### Running in Docker
+
+```bash
+docker run --rm -v $(pwd)/reports:/reports \
+  python:3.12-slim sh -c \
+  "pip install rich requests -q && python waf_tester.py \
+   --url https://target.example.com \
+   --output-dir /reports --confirm"
+```
+
+### Running in CI/CD (GitHub Actions)
+
+```yaml
+- name: WAF Evaluation
+  run: |
+    pip install rich requests
+    python waf_tester.py \
+      --url ${{ secrets.WAF_TARGET_URL }} \
+      --suites owasp,api,bypass \
+      --output json \
+      --output-dir ./reports \
+      --confirm
+
+- name: Upload report
+  uses: actions/upload-artifact@v3
+  with:
+    name: waf-report
+    path: reports/
+```
+
+---
+
+## Burp Suite Integration
+
+The Python CLI can route all test traffic through Burp Suite, giving you a full HTTP history of every payload WAF Tester sends. This is useful for manual inspection of requests and responses, fine-tuning payloads, troubleshooting unexpected WAF behavior, and using Burp's own scanner or repeater on interesting findings.
+
+### How it works
+
+Burp Suite runs a local proxy listener (default `127.0.0.1:8080`). When you point WAF Tester's proxy environment variables at that address, every request the tool makes passes through Burp before reaching the target. You see each payload in Burp's HTTP history with the full request and response — status code, headers, body — exactly as the WAF saw it.
+
+### Setup
+
+**1. Start Burp Suite and confirm the proxy listener is active:**
+
+Open Burp → Proxy → Proxy Settings → confirm listener is on `127.0.0.1:8080` (or note your port if different).
+
+**2. Export Burp's CA certificate and trust it (one-time setup):**
+
+WAF Tester connects to HTTPS targets, so Burp needs to intercept TLS. Go to Burp → Proxy → Proxy Settings → Import/Export CA Certificate → Export as DER. Install it as a trusted root CA on your system, or set the environment variable below to skip verification (fine for lab use, not production).
+
+**3. Run WAF Tester with `--proxy`:**
+
+```bash
+python waf_tester.py --url https://target.example.com --proxy http://127.0.0.1:8080
+```
+
+On Windows:
+```cmd
+python waf_tester.py --url https://target.example.com --proxy http://127.0.0.1:8080
+```
+
+You can also still use environment variables if you prefer:
+
+```bash
+HTTPS_PROXY=http://127.0.0.1:8080 HTTP_PROXY=http://127.0.0.1:8080 \
+python waf_tester.py --url https://target.example.com
+```
+
+**4. Turn off Burp's interception:**
+
+In Burp → Proxy → Intercept, make sure interception is **off** — otherwise Burp will pause on every request waiting for you to forward it manually, and WAF Tester will time out. You want Burp to passively log traffic, not intercept it.
+
+**5. Watch the requests arrive in Burp's HTTP history:**
+
+Each WAF Tester payload appears as a separate entry. You can right-click any request and send it to Repeater to manually tweak and resend it, or to Intruder to fuzz further.
+
+### If you get TLS errors
+
+If the Burp CA cert is not trusted, add `--no-verify` workaround by temporarily disabling SSL verification in the tool. Alternatively, trust the Burp CA cert system-wide or use an HTTP (not HTTPS) target for initial testing.
 
 ---
 
@@ -112,27 +229,23 @@ Output appears in `dist/` as both an NSIS installer (`.exe`) and a portable exec
 
 | Score | Grade | Meaning |
 |-------|-------|---------|
-| 90–100% | A | Excellent — WAF is blocking almost all attack vectors |
+| 90–100% | A | Excellent — WAF blocking almost all attack vectors |
 | 80–89% | B | Good — minor gaps worth investigating |
 | 65–79% | C | Fair — notable bypass vectors present |
 | 50–64% | D | Poor — significant protection gaps |
 | < 50% | F | Critical — WAF is largely ineffective |
 
-A **BLOCKED** result means the WAF returned a blocking response (4xx, 503, or a WAF block page) before the payload reached the origin.
-
-A **BYPASSED** result means the payload likely reached the application — the WAF did not intervene.
-
-Confidence levels:
+**Confidence levels:**
 - `HIGH` — hard block status (403, 406, 429) with no ambiguity
-- `LIKELY` — WAF keywords detected in response body, or status differs from baseline
-- `UNCERTAIN` — soft block status (400, 503) that could be a legitimate app error
+- `LIKELY` — WAF keywords in response body, or status differs from baseline
+- `UNCERTAIN` — soft block (400, 503) that could be a legitimate app error
 
 ---
 
 ## Recommended Test Workflow
 
 1. **Run against Juice Shop with no WAF** → confirm mostly bypassed (tool is firing correctly)
-2. **Run against ModSecurity/OWASP CRS** → confirm mostly blocked (scoring logic is working)
+2. **Run against ModSecurity/OWASP CRS** → confirm mostly blocked (scoring logic works)
 3. **Run against your target WAF** → real evaluation results
 
 ```bash
@@ -154,8 +267,9 @@ waf-tester/
 │   ├── preload.js       # Secure context bridge
 │   └── renderer/
 │       ├── index.html   # App shell
-│       ├── styles.css   # UI theme (dark military/SOC aesthetic)
+│       ├── styles.css   # Dark military/SOC UI theme
 │       └── app.js       # UI logic, filters, live feed, export
+├── waf_tester.py        # Python CLI — single file, no config needed
 ├── package.json
 └── README.md
 ```
@@ -170,16 +284,16 @@ waf-tester/
 - Added **Business Logic** suite (price manipulation, privilege escalation, forced browsing)
 - Added **compliance tags** (OWASP, CWE, NIST, PCI-DSS) on every test
 - Added **Framework filter** in Results view
-- Full enterprise UI overhaul — SVG score rings, animated scan line, hex grid background, Rajdhani/Exo 2 typography
+- Added **Python CLI** (`waf_tester.py`) — single file, runs anywhere
+- Full enterprise UI overhaul — SVG score rings, animated scan line, hex grid background
 
 ### v1.1.0
 - Added **authentication support** (Bearer, API key, cookie, Basic Auth)
 - Added **baseline comparison** and **confidence scoring** (HIGH / LIKELY / UNCERTAIN)
 - Added **User-Agent rotation** across 6 realistic browser UAs
-- Added **X-WAF-Tester header toggle** (now opt-in, off by default)
+- Added **X-WAF-Tester header toggle** (opt-in, off by default)
 - Added **permission checkbox** before each scan
-- Fixed export toast visibility across all views
-- Fixed CRLF header injection crash in bypass tests
+- Fixed export toast visibility and CRLF crash in bypass tests
 
 ### v1.0.0
 - Initial release — 40 tests, 4 suites, JSON + HTML export
